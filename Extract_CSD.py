@@ -1,16 +1,16 @@
 from PostProcessingUtils import PostProcessingUtils
 from openpyxl import Workbook, load_workbook
 from datetime import datetime
+from FilterMask import *
 import sys
 import os
 
-analyzerList = [';Common Displays;VoIP Analysis;VONR MO Call Setup Summary',
-                ';Common Displays;VoIP Analysis;VONR MT Call Setup Summary']
+filter_mask[ANALYZER_FILTER] = [';Common Displays;VoIP Analysis;VONR MO Call Setup Summary',
+                                ';Common Displays;VoIP Analysis;VONR MT Call Setup Summary']
 
 ExtractCSD = PostProcessingUtils()
 ExtractCSD.getArgv(sys.argv)
 ExtractCSD.scanWorkingDir()
-ExtractCSD.setDefaultAnalyzerList(analyzerList)
 ExtractCSD.exportAnalyzer()
 ExtractCSD.scanWorkingDir('.xlsm')
 ALL_CSD_Files = ExtractCSD.getFilesPath()

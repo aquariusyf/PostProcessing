@@ -6,8 +6,7 @@
 #  * initLogPacketList ----- Initializing the packet list extracted from text files
 #  * getLogPacketList ----- Getter of log packet list
 #  * convertToText ----- Convert .hdf logs to text files with given log or qtrace filter
-#  * findKeywords ----- Find keywords from log text file (Put keywords in keywords_filter.txt and copy to log path)
-#  * setDefaultAnalyzerList ----- Set the default analyzer/grid list (APEX build in)
+#  * findKeywords ----- Find keywords from log text file (Keywords defined in FilterMask)
 #  * exportAnalyzer ----- Extract the given (or default) analyzer/grid from logs
 #  * mergeLogs ----- Merge multiple logs (and convert .qdss/qmdl2 or .bin files to .hdf)
 #  * checkConditionIn_X_secs_from_Y ----- Check log packets within x secs of anchor y, take actions (pre-defined) if condition (pre-defined) is met
@@ -38,6 +37,7 @@ import signal
 from datetime import datetime
 from sys import platform
 from typing import List
+from FilterMask import *
 if platform == "linux" or platform == "linux2":
     sys.path.append('/opt/qcom/APEX7/Support/Python')	
 elif platform == "win32":
@@ -48,30 +48,24 @@ import ApexClient
 class PostProcessingUtils(object):
     
     ### Constructor ###
-    def __init__(self):
+    def __init__(self, filterMask = filter_mask):
         self.files = []
         self.fileExt = '.hdf' # default = .hdf
         self.dirs = []
         self.workingDir = ''
         self.pktFilter = []
         self.pktCodeFormat = re.compile(r'[0][x][\dA-F]{4}$')
-        self.defaultPacketFilter = [0xB821, 0x1568, 0x1569, 0x156A, 0x156C, 
-                                    0xB800, 0xB801, 0xB808, 0xB809, 0xB80A, 
-                                    0xB80B, 0xB814, 0x1CD0]
+        self.defaultPacketFilter = filterMask[LOG_FILTER]
         self.eventFilter = []
         self.eventCodeFormat = re.compile(r'^[\d]{3,4}$')
-        self.defaultEventFilter = [3188, 3190]
-        self.keywords = []
+        self.defaultEventFilter = filterMask[EVENT_FILTER]
+        self.keywords = filterMask[KEYWORDS_FILTER]
         self.isQtrace = False
-        self.qtraceFilterStringList = {} # Save Qtrace key words (line by line) in text file qtrace_strings_filter.txt, place in log folder
-        self.qtraceFilterStringListNonRegex = [] # if related .qsr4 / .qdb is not with test log(s), then may specify it via "QShrink Server" config param
-        self.qtraceFilterStringListRegex = [] # result = apexApp.PutProperty("QShrink Server", "C:\\Temp\\QShrink")
+        self.qtraceFilterStringList = {} 
+        self.qtraceFilterStringListNonRegex = filterMask[QTRACE_NON_REGEX]
+        self.qtraceFilterStringListRegex = filterMask[QTRACE_REGEX]
         self.analyzerGrid = []
-        self.defaultAnalyzerList = [';NR5G;Summary;PDSCH;NR5G PDSCH Statistics', 
-                                    ';NR5G;Summary;UCI;CSF;NR5G CQI Summary', 
-                                    ';NR5G;Summary;NR5G Doppler and Delay Spread Bin Summary', 
-                                    ';NR5G;Summary;MEAS;NR5G Cell Meas Summary V2', 
-                                    ';NR5G;Summary;SNR;NR5G Sub6 SNR Summary'] # Place holder of default analyzer list
+        self.defaultAnalyzerList = filterMask[ANALYZER_FILTER]
         self.logPackets = {}
         self.logPacketFormat = {'headlineFormat':re.compile(r'^[\d]{4}[\s]{1}[A-Za-z]{3}[\s]{1,2}[\d]{1,2}[\s]{2}([\d]{2}:[\d]{2}:[\d]{2}\.[\d]{3}).*([0][x][\dA-F]{4})(.*)$'), 
                                 'subIdFormat': re.compile(r'^Subscription ID =.*([\d]{1})')}
@@ -122,16 +116,12 @@ class PostProcessingUtils(object):
         else:
             sys.exit('(PostProcessingUtils/getArgv) ' + 'Error: Directory does not exist --- ' + self.workingDir)
 
-    ### Scan dirs and get files (including .awsi, Qtrace filter, keywords filter) to be processed with given extension, by defualt fileExt is set to .hdf ###
+    ### Scan dirs and get files (including .awsi) to be processed with given extension, by defualt fileExt is set to .hdf ###
     def scanWorkingDir(self, fileExt = '.hdf'):
 
         self.fileExt = fileExt # override fileExt if needed
         self.files = [] # Clear old files before new scan
         self.analyzerGrid = [] # Clear old files before new scan
-        isQtraceFilterFound = False
-        qtraceFilterFile = ''
-        isKeywordsFilterFound = False
-        keywordsFile = ''
 
         # Check if getArgv is executed and path exists
         if os.path.exists(os.path.abspath(self.workingDir)):
@@ -139,63 +129,35 @@ class PostProcessingUtils(object):
         else:
             sys.exit(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Error: Directory does not exist --- ' + self.workingDir)
 
-        # Get files and dirs from working directory, scan for .awsi grid files, Qtrace log filter and keywords filter
+        # Get files and dirs from working directory, scan for .awsi grid files
         for path, dirs, files in os.walk(os.path.abspath(self.workingDir)):
             for file in files:
                 if file.endswith(self.fileExt):
                     self.files.append(os.path.join(path, file))
                     print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + self.fileExt + ' file found: ' + str(file))
                 elif file.endswith('.awsi') or file.endswith('.aws'):
-                    self.analyzerGrid.append(os.path.join(path, file))            
-                elif self.isQtrace and file == 'qtrace_strings_filter.txt':
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Qtrace fitler found')
-                    isQtraceFilterFound = True
-                    qtraceFilterFile = os.path.join(path,file)
-                elif file == 'keywords_filter.txt' and self.fileExt == '_flt_text.txt':
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Keywords fitler found')
-                    isKeywordsFilterFound = True
-                    keywordsFile = os.path.join(path,file)                              
+                    self.analyzerGrid.append(os.path.join(path, file))                                 
             
             for dir in dirs:
                 self.dirs.append(os.path.join(path, dir))
                 #print('(PostProcessingUtils/scanDirs)' + 'Dir found: ' + os.path.join(path, dir))
         
         # Check if Qtrace is enabled and filter is found
-        if self.isQtrace and isQtraceFilterFound == False:
-            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + "No Qtrace filter found, please create filter in 'qtrace_strings_filter.txt' and place it into log folder!")
+        if self.isQtrace and len(self.qtraceFilterStringListNonRegex) == 0 and len(self.qtraceFilterStringListRegex) == 0:
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + "No Qtrace filter found, please specify qtrace keywords in FilterMask!")
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'No Qtrace filter will be applied!')
             self.isQtrace = False
-        elif self.isQtrace and isQtraceFilterFound:
-            filterFile = open(qtraceFilterFile, 'r')
-            filterLines = filterFile.readlines()
-            filterFile.close()
-            for line in filterLines:
-                if line == '\n' or line.isspace():
+        elif self.isQtrace and self.fileExt == '.hdf':
+            for qt_NonRegex in self.qtraceFilterStringListNonRegex:
+                if qt_NonRegex == '\n' or qt_NonRegex.isspace():
                     continue
                 else:
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Qtrace key words in filter: ' + line)
-                    line = line.strip()
-                    self.qtraceFilterStringListNonRegex.append(line)
-                    # self.qtraceFilterStringListRegex.append(line)
-            if len(self.qtraceFilterStringListNonRegex) == 0:
-                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'No Qtrace key words found in filter')
-                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'No Qtrace filter will be applied!')
-                self.isQtrace = False
-
-        # Check if keywords filter is found
-        if isKeywordsFilterFound:
-            keywordsFitlerFile = open(keywordsFile, 'r')
-            keywordsFilterLines = keywordsFitlerFile.readlines()
-            keywordsFitlerFile.close()
-            for line in keywordsFilterLines:
-                if line == '\n' or line.isspace():
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Qtrace keywords in filter: ' + qt_NonRegex)
+            for qt_Regex in self.qtraceFilterStringListRegex:
+                if qt_Regex == '\n' or qt_Regex.isspace():
                     continue
                 else:
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Keyword in filter: ' + line)
-                    line = line.strip()
-                    self.keywords.append(line)
-            if len(self.keywords) == 0:
-                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'No keywords found in filter!')                                
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Qtrace key words in filter: ' + qt_Regex)                        
         
     ### Getter of files in the working directory with given extension ###
     def getFilesPath(self):
@@ -289,8 +251,6 @@ class PostProcessingUtils(object):
             noEventFitler = True
         if self.isQtrace:
             self.qtraceFilterStringList = {0: self.qtraceFilterStringListNonRegex, 1: self.qtraceFilterStringListRegex}
-            # self.qtraceFilterStringList[0] = self.qtraceFilterStringListNonRegex
-            # self.qtraceFilterStringList[1] = self.qtraceFilterStringListRegex
 
         # Open APEX and set log filter
         try:
@@ -365,7 +325,7 @@ class PostProcessingUtils(object):
                         apex.Set('PacketFilter', 0x1FE8, 1)
                         apex.Set('PacketFilter', 0x1FEB, 1)
                         apex.Commit('PacketFilter')
-                        result = apex.SetQtraceFilterString(self.qtraceFilterStringList)
+                        apex.SetQtraceFilterString(self.qtraceFilterStringList)
                         apex.SortByTime()
                     
                     firstTimeRun = False
@@ -393,12 +353,12 @@ class PostProcessingUtils(object):
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'All logs converted!')
         apex.Exit()
 
-    ### Find keywords from log text file (Put keywords in keywords_filter.txt and copy to log path) ###
+    ### Find keywords from log text file (Keywords defined in FilterMask) ###
     def findKeywords(self):
         if len(self.files) == 0:
             sys.exit('(PostProcessingUtils/findKeywords) ' + 'No log text file found!!!')
         if len(self.keywords) == 0:
-            sys.exit('(PostProcessingUtils/findKeywords) ' + "No keywords found, please create filter in 'keywords_filter.txt' and place it into log folder!")
+            sys.exit('(PostProcessingUtils/findKeywords) ' + "No keywords found, please specify keywords in FilterMask!")
         
         resultFile = os.path.join(self.workingDir, 'keywords_search_result.txt')      
         f = open(resultFile, 'w')
@@ -430,13 +390,6 @@ class PostProcessingUtils(object):
         f.close()
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Search keywords completed!')
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Result in: ' + resultFile)            
-    
-    ### Set default analyzer list ###
-    def setDefaultAnalyzerList(self, analyzerList):
-        if len(analyzerList) != 0:
-            self.defaultAnalyzerList = analyzerList 
-        else:
-            sys.exit('(PostProcessingUtils/setDefaultAnalyzerList) ' + 'Input analyzer list is empty!!!')
 
     ### Export analyzer to Excel ###
     def exportAnalyzer(self):

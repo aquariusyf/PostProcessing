@@ -1,14 +1,18 @@
 from PostProcessingUtils import LogPacket_RTP, LogPacket_PDSCH, PostProcessingUtils
+from FilterMask import *
 import sys
 import matplotlib.pyplot as plt
 
 if __name__=='__main__':
     
+    filter_mask[LOG_FILTER] = [0xB821, 0x1568, 0x1569, 0x156A, 0x156C, 0xB800, 0xB801, 0xB808, 
+                               0xB809, 0xB80A, 0xB80B, 0xB814, 0x1CD0, 0xB887]
+    
     findTS = PostProcessingUtils()
     findTS.getArgv(sys.argv)
-    #findTS.scanWorkingDir()
-    #findTS.convertToText()
-    findTS.scanWorkingDir('.txt')
+    findTS.scanWorkingDir()
+    findTS.convertToText()
+    findTS.scanWorkingDir('_flt_text.txt')
     findTS.initLogPacketList()
     logPktList = findTS.getLogPacketList()
     PDSCHPktList = []
