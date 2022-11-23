@@ -27,9 +27,9 @@ TotalNumRTP = ['Total Num of DL RTP Packets Elapsed']
 TotalNumVoiceRTP = ['Total Num of Voice Packets Received']
 TotalNumSilenceRTP = ['Total Num of Silence Packets Received']
 TotalRTPLoss = ['Total RTP Loss']
-TotalRTPLossInTS = ['Total RTP Loss During Talkspurt']
+TotalRTPLossInTS = ['Total RTP Loss (In Talkspurt)']
 TotalRTPLossRate = ['Total RTP Loss Rate']
-TotalRTPLossRateInTS = ['Total RTP Loss Rate During Talkspurt']
+TotalRTPLossRateInTS = ['Total RTP Loss Rate (In Talkspurt)']
 NWLoss = ['Network Loss']
 QDJ_Underflow = ['QDJ Underflow']
 QDJ_OPT2 = ['QDJ Optimization 2']
@@ -39,8 +39,8 @@ QDJ_Reset = ['QDJ Reset']
 QDJ_ENQ_Delayed = ['QDJ Enqueue Delayed']
 QDJ_Out_Of_Order = ['QDJ Out of Order']
 RTP_Discard = ['RTP Discard']
-NumRTPBurst = ['Num of RTP Packet Burst']
-MaxRTPBurst = ['Max Num of Packet in Burst']
+NumRTPBurst = ['Total RTP Packet Burst Occurrence']
+MaxRTPBurst = ['Max Num of Packets in Burst']
 AvgJitter = ['Avg Inter Jitter']
 MaxJitter = ['Max Inter Jitter']
 MinJitter = ['Min Inter Jitter']
@@ -54,21 +54,21 @@ AvgQsize = ['Avg Q Size (In Talkspurt)']
 MaxQsize = ['Max Q Size (In Talkspurt)']
 MinQsize = ['Min Q Size (In Talkspurt)']
 TotalHandover = ['Total Num of Handover']
-HandoverPktLoss = ['Num of RTP Loss in HO']
+HandoverPktLoss = ['Total Num of RTP Loss during HO']
 AvgControlDelay = ['Avg Control Plane Handover Delay (ms)']
 MaxControlDelay = ['Max Control Plane Handover Delay (ms)']
 MinControlDelay = ['Min Control Plane Handover Delay (ms)']
 AvgUserDelay = ['Avg User Plane Handover Delay (ms)']
 MaxUserDelay = ['Max User Plane Handover Delay (ms)']
 MinUserDelay = ['Min User Plane Handover Delay (ms)']
-HandoverInTS = ['Num of Handover During Talkspurt']
-HandoverPktLoss_TS = ['Num of RTP Loss in HO During Talkspurt']
-AvgControlDelay_TS = ['Avg Control Plane Handover Delay in Talkspurt (ms)']
-MaxControlDelay_TS = ['Max Control Plane Handover Delay in Talkspurt (ms)']
-MinControlDelay_TS = ['Min Control Plane Handover Delay in Talkspurt (ms)']
-AvgUserDelay_TS = ['Avg User Plane Handover Delay in Talkspurt (ms)']
-MaxUserDelay_TS = ['Max User Plane Handover Delay in Talkspurt (ms)']
-MinUserDelay_TS = ['Min User Plane Handover Delay in Talkspurt (ms)']
+HandoverInTS = ['Total Num of Handover (In Talkspurt)']
+HandoverPktLoss_TS = ['Total Num of RTP Loss during HO (In Talkspurt)']
+AvgControlDelay_TS = ['Avg Control Plane Handover Delay (In Talkspurt) (ms)']
+MaxControlDelay_TS = ['Max Control Plane Handover Delay (In Talkspurt) (ms)']
+MinControlDelay_TS = ['Min Control Plane Handover Delay (In Talkspurt) (ms)']
+AvgUserDelay_TS = ['Avg User Plane Handover Delay (In Talkspurt) (ms)']
+MaxUserDelay_TS = ['Max User Plane Handover Delay (In Talkspurt) (ms)']
+MinUserDelay_TS = ['Min User Plane Handover Delay (In Talkspurt) (ms)']
 
 
 # Initialize sub-class pkt list and first row with log names
@@ -548,8 +548,8 @@ ws.append(AvgQsize)
 ws.append(MaxQsize)
 ws.append(MinQsize)
 ws.append(TotalHandover)
-ws.append(HandoverInTS)
 ws.append(HandoverPktLoss)
+ws.append(HandoverInTS)
 ws.append(HandoverPktLoss_TS)
 ws.append(AvgControlDelay)
 ws.append(MaxControlDelay)
