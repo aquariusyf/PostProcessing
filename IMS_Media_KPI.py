@@ -80,9 +80,15 @@ for key in logPktList_All_Logs.keys():
         TS_Log_Pkts.append(LogPacket_Talkspurt(pkt)) # Init talkspurt pkt list from all pkts
         if pkt.getPacketCode() == '0x1568' or pkt.getPacketCode() == '0x1569':
             RTP_Log_Pkts.append(LogPacket_RTP(pkt)) # Init RTP pkt list from all pkts
-    LogPacket_Talkspurt.findTalkspurt(TS_Log_Pkts) # Mark pkts in talkspurt
+    if TS_Log_Pkts != []:
+        LogPacket_Talkspurt.findTalkspurt(TS_Log_Pkts) # Mark pkts in talkspurt
+    else:
+        print(datetime.now().strftime("%H:%M:%S"), '(IMS_Media_KPI) ' + 'No log pkt found in: ' + key)
     logPktList_All_TS_Logs[key] = TS_Log_Pkts
-    LogPacket_Talkspurt.findTalkspurt(RTP_Log_Pkts) # Mark pkts in talkspurt
+    if RTP_Log_Pkts != []:
+        LogPacket_Talkspurt.findTalkspurt(RTP_Log_Pkts) # Mark pkts in talkspurt
+    else:
+        print(datetime.now().strftime("%H:%M:%S"), '(IMS_Media_KPI) ' + 'No RTP pkt found in: ' + key)
     logPktList_All_RTP_Logs[key] = RTP_Log_Pkts
     First_Row.append(key) # Init first row with log names
     
@@ -133,7 +139,7 @@ def getTotalVoiceSilenceRTP(pktList):
 def getNumRTPLoss(pktList):
 
     if len(pktList) == 0:
-        return [0, 0, 0, 0, 0, 0, 0, 0]
+        return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     LossInTS = 0
     NWLoss = 0
     qdjUnderflow = 0
@@ -508,9 +514,16 @@ for log in logPktList_All_TS_Logs.values():
 
 # Calculate RTP loss rate
 for i in range(1, len(TotalNumRTP)):
-    TotalRTPLossRate.append(float(TotalRTPLoss[i]/TotalNumRTP[i]))
+    if TotalNumRTP[i] == 0:
+        TotalRTPLossRate.append(0)
+    else:
+        TotalRTPLossRate.append(float(TotalRTPLoss[i]/TotalNumRTP[i]))
+
 for j in range(1, len(TotalNumVoiceRTP)):
-    TotalRTPLossRateInTS.append(float(TotalRTPLossInTS[j]/TotalNumVoiceRTP[j]))
+    if TotalNumVoiceRTP[j] == 0:
+        TotalRTPLossRateInTS.append(0)
+    else:
+        TotalRTPLossRateInTS.append(float(TotalRTPLossInTS[j]/TotalNumVoiceRTP[j]))
 
 # Init work book and fill rows with data
 wb = Workbook()
