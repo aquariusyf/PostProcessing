@@ -96,24 +96,29 @@ for key in logPktList_All_Logs.keys():
 def getTotalRTP(pktList):
     firstSeq = 0
     lastSeq = 0
+    lastSeqSsrc = 0
     if len(pktList) == 0:
         return 0
-
-    # Find first DL RTP in log
-    for i in range(0, len(pktList)):
-        if pktList[i].getPacketCode() == '0x1568' and pktList[i].getDirection() == 'NETWORK_TO_UE':
-            firstSeq = pktList[i].getSequence()
-            #print(firstSeq)
-            break
     
     # Find last DL RTP in log
     j = len(pktList) - 1
     while(j >= 0):
-        if pktList[j].getPacketCode() == '0x1568' and pktList[j].getDirection() == 'NETWORK_TO_UE':
+        if pktList[j].getPacketCode() == '0x1568' and pktList[j].getDirection() == 'NETWORK_TO_UE' and pktList[j].getMediaType() == 'AUDIO':
             lastSeq = pktList[j].getSequence()
+            lastSeqSsrc = pktList[j].getSsrc()
             #print(lastSeq)
             break
         j -= 1
+
+    # Find first DL RTP in log
+    for i in range(0, len(pktList)):
+        if pktList[i].getPacketCode() == '0x1568' and pktList[i].getDirection() == 'NETWORK_TO_UE' and pktList[i].getMediaType() == 'AUDIO':
+            if pktList[i].getSsrc() == lastSeqSsrc:
+                firstSeq = pktList[i].getSequence()
+                #print(firstSeq)
+                break
+            else:
+                continue
 
     if lastSeq >= firstSeq:
         return lastSeq - firstSeq + 1
@@ -124,18 +129,27 @@ def getTotalRTP(pktList):
 def getTotalVoiceSilenceRTP(pktList):
     totalVoice = 0
     totalSilence = 0
+    lastSeqSsrc = 0
     if len(pktList) == 0:
         return [0, 0]
 
+    # Find Ssrc of last DL voice RTP in log
+    j = len(pktList) - 1
+    while(j >= 0):
+        if pktList[j].getPacketCode() == '0x1568' and pktList[j].getDirection() == 'NETWORK_TO_UE' and pktList[j].getMediaType() == 'AUDIO':
+            lastSeqSsrc = pktList[j].getSsrc()
+            break
+        j -= 1
+
     for pkt in pktList:
-        if pkt.getPacketCode() == '0x1568' and pkt.getDirection() == 'NETWORK_TO_UE' and pkt.isInTalkspurt():
+        if pkt.getPacketCode() == '0x1568' and pkt.getDirection() == 'NETWORK_TO_UE' and pkt.getMediaType() == 'AUDIO' and pkt.isInTalkspurt() and pkt.getSsrc() == lastSeqSsrc:
             totalVoice += 1
-        elif pkt.getPacketCode() == '0x1568' and pkt.getDirection() == 'NETWORK_TO_UE' and not pkt.isInTalkspurt():
+        elif pkt.getPacketCode() == '0x1568' and pkt.getDirection() == 'NETWORK_TO_UE' and pkt.getMediaType() == 'AUDIO' and not pkt.isInTalkspurt() and pkt.getSsrc() == lastSeqSsrc:
             totalSilence += 1
     
     return [totalVoice, totalSilence]
 
-# Get total num of RTP loss of different types, all total pkt loss during talkspurt
+# Get total num of RTP loss of different types, total pkt loss during talkspurt
 def getNumRTPLoss(pktList):
 
     if len(pktList) == 0:

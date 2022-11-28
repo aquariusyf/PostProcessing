@@ -952,12 +952,23 @@ class LogPacket_RTP(LogPacket_Talkspurt):
     def __init__(self, logPacket):
         
         LogPacket_Talkspurt.__init__(self, logPacket)
-        TS_Threshhold = 30
-        self.inBurst = False         
-
+        self.direction = ''
+        self.ratType = ''
+        self.sequence = 0
+        self.ssrc = 0
+        self.rtpTimeStamp = 0
+        self.mediaType = ''
+        self.codecType = ''
+        self.payloadSize = 0
+        self.numLoss = 0
+        self.lossSeqNum = 0
+        self.lossType = ''
+        self.inBurst = False
+        
         re_direction = re.compile(r'^Direction.* = (.*)$')
         re_ratType = re.compile(r'^Rat Type.* = (.*)$')
         re_sequence = re.compile(r'^Sequence.* = (.*)$')
+        re_ssrc = re.compile(r'^Ssrc.* = (.*)$')
         re_rtpTimeStamp = re.compile(r'^Rtp Time stamp.* = (.*)$')
         re_mediaType = re.compile(r'^mediaType.* = (.*)$')
         re_codecType = re.compile(r'^CodecType.* = (.*)$')
@@ -978,6 +989,8 @@ class LogPacket_RTP(LogPacket_Talkspurt):
                         self.ratType = re_ratType.match(line).groups()[0]
                     elif re_sequence.match(line):
                         self.sequence = int(re_sequence.match(line).groups()[0])
+                    elif re_ssrc.match(line):
+                        self.ssrc = int(re_ssrc.match(line).groups()[0])  
                     elif re_rtpTimeStamp.match(line):
                         self.rtpTimeStamp = int(re_rtpTimeStamp.match(line).groups()[0])
                     elif re_mediaType.match(line):
@@ -986,20 +999,9 @@ class LogPacket_RTP(LogPacket_Talkspurt):
                         self.codecType = re_codecType.match(line).groups()[0]
                     elif re_payloadSize.match(line):
                         self.payloadSize = int(re_payloadSize.match(line).groups()[0])
-                        if self.payloadSize > TS_Threshhold:
-                            self.setTalkspurt()
-                        else:
-                            self.setSilence()
                     else:
                         continue
-            elif self.packetCode == '0x1569':
-                self.direction = ''
-                self.ratType = ''
-                self.sequence = 0
-                self.rtpTimeStamp = 0
-                self.mediaType = ''
-                self.codecType = ''
-                self.payloadSize = 0                
+            elif self.packetCode == '0x1569':                
                 for line in self.content:
                     if re_numLoss.match(line):
                         self.numLoss = int(re_numLoss.match(line).groups()[0])
@@ -1019,6 +1021,9 @@ class LogPacket_RTP(LogPacket_Talkspurt):
 
     def getSequence(self):
         return self.sequence
+    
+    def getSsrc(self):
+        return self.ssrc
 
     def getRtpTimeStamp(self):
         return self.rtpTimeStamp
@@ -1048,12 +1053,12 @@ class LogPacket_RTP(LogPacket_Talkspurt):
     def setInBurst(self):
         self.inBurst = True
 
-    ### Get number of DL rtp pkt in burst, mark pkt as inBurst, return burst start timestamp and number of pkt in burst ###
+    ### Get number of DL voice rtp pkt in burst, mark pkt as inBurst, return burst start timestamp and number of pkt in burst ###
     @staticmethod
     def getPacketBurst(pktList):
         rtpBurst = {}  
         if len(pktList) == 0:
-            print('(LogPacket_RTP/getPacketBurst) ' + 'No log packets found!!!')  
+            print(datetime.now().strftime("%H:%M:%S"), '(LogPacket_RTP/getPacketBurst) ' + 'No RTP packets found!!!')  
             return rtpBurst
         burst_T = 0.01
         burst_TH = 4
@@ -1069,7 +1074,7 @@ class LogPacket_RTP(LogPacket_Talkspurt):
             print('burstStart_T: ', burstStart_T)
             print('burstStart_index: ', burstStart_index)
             print('burst_counter: ', burst_counter)'''
-            if pktList[n].getPacketCode() == '0x1568' and pktList[n].getDirection() == 'NETWORK_TO_UE':
+            if pktList[n].getPacketCode() == '0x1568' and pktList[n].getDirection() == 'NETWORK_TO_UE' and pktList[n].getMediaType() == 'AUDIO':
                 if burstStart_T == -1:
                     burstStart_T = pktList[n].getAbsTime()
                     burstStart_index = n
@@ -1084,14 +1089,9 @@ class LogPacket_RTP(LogPacket_Talkspurt):
                     else:
                         if burst_counter >= burst_TH:
                             rtpBurst[burstStart_T] = burst_counter
-                            for x in range(burstStart_index, burstStart_index + burst_counter):
-                                if pktList[x].getDirection() != 'NETWORK_TO_UE':
-                                    burst_counter += 1
-                            for x in range(burstStart_index, burstStart_index + burst_counter):
-                                if pktList[x].getDirection() == 'NETWORK_TO_UE':
+                            for x in range(burstStart_index, n):
+                                if pktList[x].getDirection() == 'NETWORK_TO_UE' and pktList[x].getMediaType() == 'AUDIO':
                                     pktList[x].setInBurst()
-                                else:
-                                    burst_counter += 1
                             n += 1
                             burstStart_T = -1
                             burstStart_index = -1
@@ -1117,12 +1117,9 @@ class LogPacket_RTP(LogPacket_Talkspurt):
                     else:
                         if burst_counter >= burst_TH:
                             rtpBurst[burstStart_T] = burst_counter
-                            for x in range(burstStart_index, burstStart_index + burst_counter):
-                                if pktList[x].getDirection() != 'NETWORK_TO_UE':
-                                    burst_counter += 1
-                            for x in range(burstStart_index, burstStart_index + burst_counter):
-                                if pktList[x].getDirection() == 'NETWORK_TO_UE':
-                                    pktList[x].setInBurst()
+                            for x in range(burstStart_index, n):
+                                if pktList[x].getDirection() == 'NETWORK_TO_UE' and pktList[x].getMediaType() == 'AUDIO':
+                                    pktList[x].setInBurst()                                
                             n += 1
                             burstStart_T = -1
                             burstStart_index = -1
@@ -1134,7 +1131,7 @@ class LogPacket_RTP(LogPacket_Talkspurt):
                             burstStart_index = -1
                             burst_counter = -1                     
                             continue
-
+        
         return rtpBurst
 
     ### Destructor ###
@@ -1144,6 +1141,7 @@ class LogPacket_RTP(LogPacket_Talkspurt):
         self.direction = ''
         self.ratType = ''
         self.sequence = 0
+        self.Ssrc = 0
         self.rtpTimeStamp = 0
         self.mediaType = ''
         self.codecType = ''
