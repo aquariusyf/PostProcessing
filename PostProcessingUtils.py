@@ -27,7 +27,7 @@
 #  * getPacketBurst ----- Get number of DL rtp pkt in burst, mark pkt as inBurst, return burst start timestamp and number of pkt in burst
 #  * setInBurst ----- Set inBurst to true if detect pkt is within rtp burst
 #---------------------------------------------------------------------------------------------------------------------------------------------------
-# class LogPacket_PDSCH Functions (Inheritance of LogPacket, get number of PDSCH CRC PASS/FAIL stats in 0xB887)
+# class LogPacket_PHY_BLER Functions (Inheritance of LogPacket, get PHY layer pass/fail/newTx/ReTx in 0xB887 and 0xB883)
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 
 import os
@@ -1152,49 +1152,69 @@ class LogPacket_RTP(LogPacket_Talkspurt):
         self.lossType = ''
 
 
-##### Inheritance of LogPacket, get number of PDSCH CRC PASS/FAIL stats in 0xB887 #####
-class LogPacket_PDSCH(LogPacket):
+##### Inheritance of LogPacket, get PHY layer pass/fail/newTx/ReTx in 0xB887 and 0xB883 #####
+class LogPacket_PHY_BLER(LogPacket):
 
     ### Constructor ###
     def __init__(self, logPacket):
         
-        self.numOfPass = 0
-        self.numOfFail = 0
+        self.numOfPass_PDSCH = 0
+        self.numOfFail_PDSCH = 0
+        self.numOfNewTx_PUSCH = 0
+        self.numOfReTx_PUSCH = 0
 
         re_CRC_PASS = re.compile(r'.* PASS.*')
         re_CRC_FAIL = re.compile(r'.* FAIL.*')
+        re_NEW_TX = re.compile(r'.* NEW_TX.*')
+        re_RE_TX = re.compile(r'.* RE_TX.*')
 
         if len(logPacket.getHeadline()) == 0:
-            sys.exit('(LogPacket_PDSCH/__init__) ' + 'No log packets found!!!')
+            sys.exit('(LogPacket_PHY_BLER/__init__) ' + 'No log packets found!!!')
         else:
-            if logPacket.getPacketCode() == '0xB887':
-                self.packetCode = logPacket.getPacketCode()
-                self.subID = logPacket.getSubID()
-                self.timestamp = logPacket.getTimestamp()
-                self.title = logPacket.getTitle()
-                self.headline = logPacket.getHeadline()
-                self.content = logPacket.getContent()
-                self.absTime = logPacket.getAbsTime()
+            self.packetCode = logPacket.getPacketCode()
+            self.subID = logPacket.getSubID()
+            self.timestamp = logPacket.getTimestamp()
+            self.title = logPacket.getTitle()
+            self.headline = logPacket.getHeadline()
+            self.content = logPacket.getContent()
+            self.absTime = logPacket.getAbsTime()
+            if logPacket.getPacketCode() == '0xB887':            
                 for line in logPacket.getContent():
                     if re_CRC_PASS.match(line):
-                        self.numOfPass += 1
+                        self.numOfPass_PDSCH += 1
                     elif re_CRC_FAIL.match(line):
-                        self.numOfFail += 1
+                        self.numOfFail_PDSCH += 1
                     else:
                         continue
+            elif logPacket.getPacketCode() == '0xB883':
+                for line in logPacket.getContent():
+                    if re_NEW_TX.match(line):
+                        self.numOfNewTx_PUSCH += 1
+                    elif re_RE_TX.match(line):
+                        self.numOfReTx_PUSCH += 1
+                    else:
+                        continue            
         
     ### Getters ###
-    def getNumOfPass(self):
-        return self.numOfPass
+    def getnumOfPass_PDSCH(self):
+        return self.numOfPass_PDSCH
     
-    def getNumOfFail(self):
-        return self.numOfFail
+    def getnumOfFail_PDSCH(self):
+        return self.numOfFail_PDSCH
 
+    def getnumOfNewTx_PUSCH(self):
+        return self.numOfNewTx_PUSCH
+    
+    def getnumOfReTx_PUSCH(self):
+        return self.numOfReTx_PUSCH
+    
     ### Destructor ###
     def __del__(self):
         LogPacket.__del__(self)
-        self.numOfPass = 0
-        self.numOfFail = 0
+        self.numOfPass_PDSCH = 0
+        self.numOfFail_PDSCH = 0
+        self.numOfNewTx_PUSCH = 0
+        self.numOfReTx_PUSCH = 0
 
 
 if __name__=='__main__': 
