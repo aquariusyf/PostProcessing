@@ -522,7 +522,7 @@ class PostProcessingUtils(object):
                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/mergeLogs) ' + 'Path does not exist: ' + dir)
                 continue
         if len(filesToBeMerged) == 0:
-            sys.exit('(PostProcessingUtils/mergeLogs) ' + 'No logs found in: ', self.workingDir)
+            sys.exit('(PostProcessingUtils/mergeLogs) ' + 'No logs found in: ' + self.workingDir)
             
         # Open APEX
         try:
@@ -1216,6 +1216,57 @@ class LogPacket_PHY_BLER(LogPacket):
         self.numOfNewTx_PUSCH = 0
         self.numOfReTx_PUSCH = 0
 
+'''##### Inheritance of LogPacket, get CDRX info in 0xB890#####
+class LogPacket_CDRX(LogPacket):
+
+    ### Constructor ###
+    def __init__(self, logPacket):
+        self.cdrxEvent = {}
+        event = []
+        sfn = []
+        absTime = []
+        lastSFN = -1
+        re_CDRX_EVENT = re.compile(r'\|[0-9\s]{3}\|[0-9\sA-Za-z]{7}\|[\s]*([\d]{1,4})\|[0-9\s]{6}\|[\s]*[A-Z_]{1,18}\|([\s]*[A-Z_]{1,18}|[A-Z]{1,18})\|.*')
+        
+        if len(logPacket.getHeadline()) == 0:
+            sys.exit('(LogPacket_CDRX/__init__) ' + 'No log packets found!!!')
+        else:
+            self.packetCode = logPacket.getPacketCode()
+            self.subID = logPacket.getSubID()
+            self.timestamp = logPacket.getTimestamp()
+            self.title = logPacket.getTitle()
+            self.headline = logPacket.getHeadline()
+            self.content = logPacket.getContent()
+            self.absTime = logPacket.getAbsTime()
+            if logPacket.getPacketCode() == '0xB890':            
+                for line in logPacket.getContent():
+                    if re_CDRX_EVENT.match(line):
+                        print(line)
+                        print('g0: ' + re_CDRX_EVENT.match(line).groups()[0])
+                        print('g1: ' + re_CDRX_EVENT.match(line).groups()[1].strip())
+                        sfn.append(int(re_CDRX_EVENT.match(line).groups()[0]))
+                        event.append(re_CDRX_EVENT.match(line).groups()[1].strip())
+                event_sfn_size = len(event)
+                if event_sfn_size != 0:
+                    lastSFN = sfn[event_sfn_size-1]
+                    for sys_frame in sfn:
+                        timeDifference = lastSFN - sys_frame
+                        if timeDifference >= 0:
+                            absTime.append(self.absTime - timeDifference*0.01 - 0.02)
+                        else:
+                            absTime.append(self.absTime - (timeDifference + 1024)*0.01 - 0.02)
+                    
+                    for n in range(0, event_sfn_size):
+                        self.cdrxEvent[absTime[n]] = event[n]             
+    
+    ### Getters ###
+    def getCDRXEvent(self):
+        return self.cdrxEvent
+    
+    ### Destructor ###
+    def __del__(self):
+        LogPacket.__del__(self)
+        self.cdrxEvent = {}'''  
 
 if __name__=='__main__': 
     # PostProcessingUtils test
