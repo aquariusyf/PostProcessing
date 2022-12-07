@@ -1063,6 +1063,7 @@ class LogPacket_RTP(LogPacket_Talkspurt):
         burst_T = 0.01
         burst_TH = 4
         burstStart_T = -1
+        burstTimestamp = ''
         burstStart_index = -1
         burst_counter = -1
         n = 0
@@ -1077,6 +1078,7 @@ class LogPacket_RTP(LogPacket_Talkspurt):
             if pktList[n].getPacketCode() == '0x1568' and pktList[n].getDirection() == 'NETWORK_TO_UE' and pktList[n].getMediaType() == 'AUDIO':
                 if burstStart_T == -1:
                     burstStart_T = pktList[n].getAbsTime()
+                    burstTimestamp = pktList[n].getTimestamp()
                     burstStart_index = n
                     burst_counter = 1
                     n += 1
@@ -1088,12 +1090,13 @@ class LogPacket_RTP(LogPacket_Talkspurt):
                         continue
                     else:
                         if burst_counter >= burst_TH:
-                            rtpBurst[burstStart_T] = burst_counter
+                            rtpBurst[burstTimestamp] = burst_counter
                             for x in range(burstStart_index, n):
                                 if pktList[x].getDirection() == 'NETWORK_TO_UE' and pktList[x].getMediaType() == 'AUDIO':
                                     pktList[x].setInBurst()
                             n += 1
                             burstStart_T = -1
+                            burstTimestamp = ''
                             burstStart_index = -1
                             burst_counter = -1                               
                             continue
@@ -1103,6 +1106,7 @@ class LogPacket_RTP(LogPacket_Talkspurt):
                             else:
                                 n += 1
                             burstStart_T = -1
+                            burstTimestamp = ''
                             burstStart_index = -1
                             burst_counter = -1                     
                             continue
@@ -1116,18 +1120,20 @@ class LogPacket_RTP(LogPacket_Talkspurt):
                         continue
                     else:
                         if burst_counter >= burst_TH:
-                            rtpBurst[burstStart_T] = burst_counter
+                            rtpBurst[burstTimestamp] = burst_counter
                             for x in range(burstStart_index, n):
                                 if pktList[x].getDirection() == 'NETWORK_TO_UE' and pktList[x].getMediaType() == 'AUDIO':
                                     pktList[x].setInBurst()                                
                             n += 1
                             burstStart_T = -1
+                            burstTimestamp = ''
                             burstStart_index = -1
                             burst_counter = -1                             
                             continue
                         else:
                             n = burstStart_index + 1
                             burstStart_T = -1
+                            burstTimestamp = ''
                             burstStart_index = -1
                             burst_counter = -1                     
                             continue
@@ -1163,10 +1169,10 @@ class LogPacket_PHY_BLER(LogPacket):
         self.numOfNewTx_PUSCH = 0
         self.numOfReTx_PUSCH = 0
 
-        re_CRC_PASS = re.compile(r'.* PASS.*')
-        re_CRC_FAIL = re.compile(r'.* FAIL.*')
-        re_NEW_TX = re.compile(r'.* NEW_TX.*')
-        re_RE_TX = re.compile(r'.* RE_TX.*')
+        re_CRC_PASS = re.compile(r'.*PASS.*')
+        re_CRC_FAIL = re.compile(r'.*FAIL.*')
+        re_NEW_TX = re.compile(r'.*NEW_TX.*')
+        re_RE_TX = re.compile(r'.*RE_TX.*')
 
         if len(logPacket.getHeadline()) == 0:
             sys.exit('(LogPacket_PHY_BLER/__init__) ' + 'No log packets found!!!')
