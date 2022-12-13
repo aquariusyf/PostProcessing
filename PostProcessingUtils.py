@@ -15,6 +15,8 @@
 #  * Setters
 #  * Getters
 #  * timestampConverter ----- Convert log timestamp from string to int (in secs)
+#  * absTimeToTimestamp ----- Convert abs time to timestamp str ###
+#  * getDelayBySlot ----- Caculate delay by SFN and slot (A - B) ###
 #  * getDelay ----- Calculate the delay between two log packets
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 # Class LogPacket_Talkspurt Functions (Inheritance of LogPacket)
@@ -29,11 +31,15 @@
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 # class LogPacket_PHY_BLER Functions (Inheritance of LogPacket, get PHY layer pass/fail/newTx/ReTx in 0xB887 and 0xB883)
 #---------------------------------------------------------------------------------------------------------------------------------------------------
+# class LogPacket_CDRX Functions (Inheritance of LogPacket, get CDRX info in 0xB890)
+#  * getCDRXEvent ----- Get CDRX event dict (timestamp: event)
+#---------------------------------------------------------------------------------------------------------------------------------------------------
 
 import os
 import sys
 import re
 import signal
+import pandas as pd
 from datetime import datetime
 from sys import platform
 from typing import List
@@ -836,6 +842,37 @@ class LogPacket(object):
             print(datetime.now().strftime("%H:%M:%S"), '(LogPacket/timestampConverter) ' + 'No timestamp found!')
             return -1
 
+    ### Convert abs time to timestamp str ###
+    @staticmethod
+    def absTimeToTimestamp(absTime):
+        if absTime < 0:
+            print(datetime.now().strftime("%H:%M:%S"), '(LogPacket/absTimeToTimestamp) ' + 'INVALID: absTime < 0')
+            return ''
+        # print(absTime)
+        # print(pd.to_datetime(pd.to_datetime(absTime, unit = 's'), format = '%H:%M:%S'))
+        date, time = str(pd.to_datetime(absTime, unit = 's')).split(' ')
+        return time
+    
+    ### Caculate delay by SFN and slot (A - B) ###
+    @staticmethod
+    def getDelayBySlot(sfnA, slotNumA, sfnB, slotNumB, numSlotInSFN = 20):
+        delay = -1
+        if sfnA < 0 or slotNumA < 0 or sfnB < 0 or slotNumB < 0:
+            print(datetime.now().strftime("%H:%M:%S"), '(LogPacket/getDelayBySlot) ' + 'INVALID: SFN or slot number < 0')
+            return delay
+        if numSlotInSFN <= 0:
+            print(datetime.now().strftime("%H:%M:%S"), '(LogPacket/getDelayBySlot) ' + 'INVALID: numSlotInSFN <= 0')
+            return delay
+        TotalSlotA = (sfnA + 1)*numSlotInSFN + slotNumA + 1
+        TotalSlotB = (sfnB + 1)*numSlotInSFN + slotNumB + 1
+        delayInSlot = 0
+        if TotalSlotA >= TotalSlotB:
+            delayInSlot = TotalSlotA - TotalSlotB
+        else:
+            delayInSlot = TotalSlotA + 1024*numSlotInSFN - TotalSlotB
+        delay = float('{:.3f}'.format(delayInSlot*(0.01/numSlotInSFN)))
+        return delay
+    
     ### Calculate delay of two packets (A - B) ###
     @staticmethod
     def getDelay(pktA, pktB):
@@ -1222,7 +1259,7 @@ class LogPacket_PHY_BLER(LogPacket):
         self.numOfNewTx_PUSCH = 0
         self.numOfReTx_PUSCH = 0
 
-'''##### Inheritance of LogPacket, get CDRX info in 0xB890#####
+##### Inheritance of LogPacket, get CDRX info in 0xB890 #####
 class LogPacket_CDRX(LogPacket):
 
     ### Constructor ###
@@ -1230,10 +1267,12 @@ class LogPacket_CDRX(LogPacket):
         self.cdrxEvent = {}
         event = []
         sfn = []
+        slot = []
         absTime = []
+        timestamp = []
         lastSFN = -1
-        re_CDRX_EVENT = re.compile(r'\|[0-9\s]{3}\|[0-9\sA-Za-z]{7}\|[\s]*([\d]{1,4})\|[0-9\s]{6}\|[\s]*[A-Z_]{1,18}\|([\s]*[A-Z_]{1,18}|[A-Z]{1,18})\|.*')
-        
+        lastSlot = -1
+        re_CDRX_EVENT = re.compile(r'.*\|[0-9\sA-Za-z]{7}\|[\s]*([\d]{1,4})\|([0-9\s]{6})\|[\s]*[A-Z_]{1,18}\|([\s]*[A-Z_]{1,18}|[A-Z]{1,18})\|.*')
         if len(logPacket.getHeadline()) == 0:
             sys.exit('(LogPacket_CDRX/__init__) ' + 'No log packets found!!!')
         else:
@@ -1244,26 +1283,37 @@ class LogPacket_CDRX(LogPacket):
             self.headline = logPacket.getHeadline()
             self.content = logPacket.getContent()
             self.absTime = logPacket.getAbsTime()
-            if logPacket.getPacketCode() == '0xB890':            
+            if logPacket.getPacketCode() == '0xB890':          
                 for line in logPacket.getContent():
                     if re_CDRX_EVENT.match(line):
-                        print(line)
-                        print('g0: ' + re_CDRX_EVENT.match(line).groups()[0])
-                        print('g1: ' + re_CDRX_EVENT.match(line).groups()[1].strip())
+                        '''print(line)
+                        print('g0 SFN: ' + re_CDRX_EVENT.match(line).groups()[0])
+                        print('g1 SLOT: ' + re_CDRX_EVENT.match(line).groups()[1].strip())
+                        print('g2 EVENT: ' + re_CDRX_EVENT.match(line).groups()[2].strip())'''
                         sfn.append(int(re_CDRX_EVENT.match(line).groups()[0]))
-                        event.append(re_CDRX_EVENT.match(line).groups()[1].strip())
+                        slot.append(int(re_CDRX_EVENT.match(line).groups()[1].strip()))
+                        event.append(re_CDRX_EVENT.match(line).groups()[2].strip())
                 event_sfn_size = len(event)
                 if event_sfn_size != 0:
-                    lastSFN = sfn[event_sfn_size-1]
-                    for sys_frame in sfn:
-                        timeDifference = lastSFN - sys_frame
-                        if timeDifference >= 0:
-                            absTime.append(self.absTime - timeDifference*0.01 - 0.02)
-                        else:
-                            absTime.append(self.absTime - (timeDifference + 1024)*0.01 - 0.02)
+                    lastSFN = sfn[event_sfn_size - 1]
+                    lastSlot = slot[event_sfn_size - 1]
                     
                     for n in range(0, event_sfn_size):
-                        self.cdrxEvent[absTime[n]] = event[n]             
+                        timeDifference = LogPacket.getDelayBySlot(lastSFN, lastSlot, sfn[n], slot[n])
+                        absTime.append(float('{:.3f}'.format(self.absTime - timeDifference)))
+                        '''print('TS: ' + self.getTimestamp())
+                        print('absTime: ', absTime[len(absTime) - 1])
+                        print('sfn: ', sfn[n])
+                        print('slot: ', slot[n])
+                        print('last sfn: ', lastSFN)
+                        print('last slot: ', lastSlot)
+                        print('TD: ', timeDifference)'''
+                    
+                    for absT in absTime:
+                        timestamp.append(LogPacket.absTimeToTimestamp(absT))
+                    
+                    for n in range(0, event_sfn_size):
+                        self.cdrxEvent[timestamp[n]] = event[n]             
     
     ### Getters ###
     def getCDRXEvent(self):
@@ -1272,7 +1322,7 @@ class LogPacket_CDRX(LogPacket):
     ### Destructor ###
     def __del__(self):
         LogPacket.__del__(self)
-        self.cdrxEvent = {}'''  
+        self.cdrxEvent = {}
 
 if __name__=='__main__': 
     # PostProcessingUtils test
