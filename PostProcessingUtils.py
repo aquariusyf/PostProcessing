@@ -34,6 +34,11 @@
 # class LogPacket_CDRX Functions (Inheritance of LogPacket, get CDRX info in 0xB890)
 #  * getCDRXEvent ----- Get CDRX event dict (timestamp: event)
 #---------------------------------------------------------------------------------------------------------------------------------------------------
+# class LogPacket_RSRP_SNR Functions (Inheritance of LogPacket, get RSRP/SNR info from 0xB8DD)
+#  * getRSTYPE ----- Get reference signal type
+#  * getRSRP ----- Get RSRP dict (Rx: [rsrp])
+#  * getRSRP ----- Get SNR dict (Rx: [snr])
+#---------------------------------------------------------------------------------------------------------------------------------------------------
 
 import os
 import sys
@@ -1324,16 +1329,86 @@ class LogPacket_CDRX(LogPacket):
         LogPacket.__del__(self)
         self.cdrxEvent = {}
 
+##### Inheritance of LogPacket, get RSRP/SNR info from 0xB8DD #####
+class LogPacket_RSRP_SNR(LogPacket):
+    
+    ### Constructor ###
+    def __init__(self, logPacket):
+        RX0 = 'Rx0'
+        RX1 = 'Rx1'
+        RX2 = 'Rx2'
+        RX3 = 'Rx3'
+        self.RS_TYPE = ''
+        self.RSRP = {RX0: 'NA', RX1: 'NA', RX2: 'NA', RX3: 'NA'}
+        self.SNR = {RX0: 'NA', RX1: 'NA', RX2: 'NA', RX3: 'NA'}
+        re_RS_TYPE = re.compile(r'^SSB Or TRS.* = (.*)$')
+        re_RSRP_SNR_Rx0 = re.compile(r'.*\|  0\|[\s]*[\d\.-]*\|[\s]*[\d\.-]*\|[\s]*[\d\.-]*\|[\s]*([\d\.-]*)\|[\s]*([\d\.-]*)\|$')
+        re_RSRP_SNR_Rx1 = re.compile(r'.*\|  1\|[\s]*[\d\.-]*\|[\s]*[\d\.-]*\|[\s]*[\d\.-]*\|[\s]*([\d\.-]*)\|[\s]*([\d\.-]*)\|$')
+        re_RSRP_SNR_Rx2 = re.compile(r'.*\|  2\|[\s]*[\d\.-]*\|[\s]*[\d\.-]*\|[\s]*[\d\.-]*\|[\s]*([\d\.-]*)\|[\s]*([\d\.-]*)\|$')
+        re_RSRP_SNR_Rx3 = re.compile(r'.*\|  3\|[\s]*[\d\.-]*\|[\s]*[\d\.-]*\|[\s]*[\d\.-]*\|[\s]*([\d\.-]*)\|[\s]*([\d\.-]*)\|$')
+        
+        if len(logPacket.getHeadline()) == 0:
+            sys.exit('(LogPacket_RSRP_SNR/__init__) ' + 'No log packets found!!!')
+        else:
+            self.packetCode = logPacket.getPacketCode()
+            self.subID = logPacket.getSubID()
+            self.timestamp = logPacket.getTimestamp()
+            self.title = logPacket.getTitle()
+            self.headline = logPacket.getHeadline()
+            self.content = logPacket.getContent()
+            self.absTime = logPacket.getAbsTime()
+            if logPacket.getPacketCode() == '0xB8DD':          
+                for line in logPacket.getContent():
+                    if re_RS_TYPE.match(line):
+                        self.RS_TYPE = re_RS_TYPE.match(line).groups()[0]
+                    elif re_RSRP_SNR_Rx0.match(line):
+                        self.SNR[RX0] = float(re_RSRP_SNR_Rx0.match(line).groups()[0])
+                        self.RSRP[RX0] = float(re_RSRP_SNR_Rx0.match(line).groups()[1])
+                    elif re_RSRP_SNR_Rx1.match(line):
+                        self.SNR[RX1] = float(re_RSRP_SNR_Rx1.match(line).groups()[0])
+                        self.RSRP[RX1] = float(re_RSRP_SNR_Rx1.match(line).groups()[1])
+                    elif re_RSRP_SNR_Rx2.match(line):
+                        self.SNR[RX2] = float(re_RSRP_SNR_Rx2.match(line).groups()[0])
+                        self.RSRP[RX2] = float(re_RSRP_SNR_Rx2.match(line).groups()[1])
+                    elif re_RSRP_SNR_Rx3.match(line):
+                        self.SNR[RX3] = float(re_RSRP_SNR_Rx3.match(line).groups()[0])
+                        self.RSRP[RX3] = float(re_RSRP_SNR_Rx3.match(line).groups()[1])
+            
+            '''print('SSB OR TRS: ' + self.RS_TYPE)
+            for i, j in self.SNR.items():
+                print('SNR ' + i, j)
+            for i, j in self.RSRP.items():
+                print('RSRP ' + i, j)'''
+    
+    ### Getters ###
+    def getRSTYPE(self):
+        return self.RS_TYPE
+    
+    def getRSRP(self):
+        return self.RSRP
+    
+    def getSNR(self):
+        return self.SNR
+            
+    ### Destructor ###
+    def __del__(self):
+        LogPacket.__del__(self)
+        self.RS_TYPE = ''
+        self.RSRP = {}
+        self.SNR = {}
+
 if __name__=='__main__': 
     # PostProcessingUtils test
     testDir = PostProcessingUtils()
-    # testDir.getArgv(sys.argv)
-    # testDir.scanWorkingDir('.txt')
-    # testDir.initLogPacketList()
-    '''for value in testDir.getLogPacketList().values():
-        for n in range(1, len(value)):
-            print(LogPacket.getDelay(value[n], value[n-1]))'''
+    testDir.getArgv(sys.argv)
+    testDir.scanWorkingDir()
     # testDir.convertToText()
+    testDir.scanWorkingDir('.txt')
+    testDir.initLogPacketList()
+    for value in testDir.getLogPacketList().values():
+        for log in value:
+            if log.getPacketCode() == '0xB8DD':
+                LogPacket_RSRP_SNR(log)
     # testDir.exportAnalyzer()
     # testDir.mergeLogs()
               
