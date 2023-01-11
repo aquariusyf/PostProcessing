@@ -269,12 +269,13 @@ b6 = Histogram_RSRP.bar(RSRP_120, RSRP_Histogram_Attr[RSRP_120], width=1, edgeco
 
 Histogram_RSRP.set_title('RSRP Histogram')
 Histogram_RSRP.grid(True)
-Histogram_RSRP.bar_label(b1, labels=[format(RSRP_Histogram_Attr[RSRP_70]/numRSRP, '.1%')], label_type='center')
-Histogram_RSRP.bar_label(b2, labels=[format(RSRP_Histogram_Attr[RSRP_70_85]/numRSRP, '.1%')], label_type='center')
-Histogram_RSRP.bar_label(b3, labels=[format(RSRP_Histogram_Attr[RSRP_85_95]/numRSRP, '.1%')], label_type='center')
-Histogram_RSRP.bar_label(b4, labels=[format(RSRP_Histogram_Attr[RSRP_95_105]/numRSRP, '.1%')], label_type='center')
-Histogram_RSRP.bar_label(b5, labels=[format(RSRP_Histogram_Attr[RSRP_105_120]/numRSRP, '.1%')], label_type='center')
-Histogram_RSRP.bar_label(b6, labels=[format(RSRP_Histogram_Attr[RSRP_120]/numRSRP, '.1%')], label_type='center')
+if numRSRP > 0:
+    Histogram_RSRP.bar_label(b1, labels=[format(RSRP_Histogram_Attr[RSRP_70]/numRSRP, '.1%')], label_type='center')
+    Histogram_RSRP.bar_label(b2, labels=[format(RSRP_Histogram_Attr[RSRP_70_85]/numRSRP, '.1%')], label_type='center')
+    Histogram_RSRP.bar_label(b3, labels=[format(RSRP_Histogram_Attr[RSRP_85_95]/numRSRP, '.1%')], label_type='center')
+    Histogram_RSRP.bar_label(b4, labels=[format(RSRP_Histogram_Attr[RSRP_95_105]/numRSRP, '.1%')], label_type='center')
+    Histogram_RSRP.bar_label(b5, labels=[format(RSRP_Histogram_Attr[RSRP_105_120]/numRSRP, '.1%')], label_type='center')
+    Histogram_RSRP.bar_label(b6, labels=[format(RSRP_Histogram_Attr[RSRP_120]/numRSRP, '.1%')], label_type='center')
 
 b7 = Histogram_SNR.bar(SNR_20, SNR_Histogram_Attr[SNR_20], width=1, edgecolor="black", color='green')
 b8 = Histogram_SNR.bar(SNR_15_20, SNR_Histogram_Attr[SNR_15_20], width=1, edgecolor="black", color='limegreen')
@@ -285,11 +286,12 @@ b12 = Histogram_SNR.bar(SNR_0, SNR_Histogram_Attr[SNR_0], width=1, edgecolor="bl
 
 Histogram_SNR.set_title('SNR Histogram')
 Histogram_SNR.grid(True)
-Histogram_SNR.bar_label(b7, labels=[format(SNR_Histogram_Attr[SNR_20]/numSNR, '.1%')], label_type='center')
-Histogram_SNR.bar_label(b8, labels=[format(SNR_Histogram_Attr[SNR_15_20]/numSNR, '.1%')], label_type='center')
-Histogram_SNR.bar_label(b9, labels=[format(SNR_Histogram_Attr[SNR_10_15]/numSNR, '.1%')], label_type='center')
-Histogram_SNR.bar_label(b10, labels=[format(SNR_Histogram_Attr[SNR_5_10]/numSNR, '.1%')], label_type='center')
-Histogram_SNR.bar_label(b11, labels=[format(SNR_Histogram_Attr[SNR_0_5]/numSNR, '.1%')], label_type='center')
-Histogram_SNR.bar_label(b12, labels=[format(SNR_Histogram_Attr[SNR_0]/numSNR, '.1%')], label_type='center')
+if numSNR > 0:
+    Histogram_SNR.bar_label(b7, labels=[format(SNR_Histogram_Attr[SNR_20]/numSNR, '.1%')], label_type='center')
+    Histogram_SNR.bar_label(b8, labels=[format(SNR_Histogram_Attr[SNR_15_20]/numSNR, '.1%')], label_type='center')
+    Histogram_SNR.bar_label(b9, labels=[format(SNR_Histogram_Attr[SNR_10_15]/numSNR, '.1%')], label_type='center')
+    Histogram_SNR.bar_label(b10, labels=[format(SNR_Histogram_Attr[SNR_5_10]/numSNR, '.1%')], label_type='center')
+    Histogram_SNR.bar_label(b11, labels=[format(SNR_Histogram_Attr[SNR_0_5]/numSNR, '.1%')], label_type='center')
+    Histogram_SNR.bar_label(b12, labels=[format(SNR_Histogram_Attr[SNR_0]/numSNR, '.1%')], label_type='center')
 
 plt.show()

@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 # Class PostProcessingUtils Functions
-#  * getArgv ----- Get inputs from command line (ARGV[1] = log path, ARGV[1 + n] = log packet code or qtrace indicator)
+#  * getArgv ----- Get inputs from command line (ARGV[1] = log path, ARGV[1 + n] = log packet code or qtrace indicator or sub ID)
 #  * scanWorkingDir ----- Scan the path for files (or given type, .hdf by default) and dirs
 #  * getFilesPath ----- Getter of files path in the working directory with given extension
 #  * initLogPacketList ----- Initializing the packet list extracted from text files
@@ -64,6 +64,7 @@ class PostProcessingUtils(object):
         self.fileExt = '.hdf' # default = .hdf
         self.dirs = []
         self.workingDir = ''
+        self.sid = '0'
         self.pktFilter = []
         self.pktCodeFormat = re.compile(r'[0][x][\dA-F]{4}$')
         self.defaultPacketFilter = filterMask[LOG_FILTER]
@@ -104,8 +105,12 @@ class PostProcessingUtils(object):
                         logEventFitler.append(eventId)
                     elif str(sysArgv[n]) == 'qtrace':
                         self.isQtrace = True
+                    elif str(sysArgv[n]) == 'sub1':
+                        self.sid = '1'
+                    elif str(sysArgv[n]) == 'sub2':
+                        self.sid = '2'
                     else:
-                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'Invalid log code format: ' + str(sysArgv[n]))
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'Invalid log code or sub ID format: ' + str(sysArgv[n]))
                         continue
                 if len(self.pktFilter) == 0:
                     print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'No packet filter found!')
@@ -237,9 +242,33 @@ class PostProcessingUtils(object):
 
     
     ### Getter of PacketList ###
-    def getLogPacketList(self): 
+    def getLogPacketList(self):
+        
         if len(self.logPackets) > 0:
-            return self.logPackets
+            if self.sid == '0':
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'SubId not specified, getting logPkts for both subs')
+                return self.logPackets
+            elif self.sid == '1':
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'Getting logPkts for sub1')
+                logPackets_sub1 = {}
+                for key in self.logPackets.keys():
+                    logPackets_sub1[key] = []
+                    for log in self.logPackets[key]:
+                        if log.getSubID() == self.sid:
+                            logPackets_sub1[key].append(log)
+                return logPackets_sub1
+            elif self.sid == '2':
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'Getting logPkts for sub2')
+                logPackets_sub2 = {}
+                for key in self.logPackets.keys():
+                    logPackets_sub2[key] = []
+                    for log in self.logPackets[key]:
+                        if log.getSubID() == self.sid:
+                            logPackets_sub2[key].append(log)
+                return logPackets_sub2
+            else:
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'Invalid sub ID: ' + self.sid)
+                return {}
         else:
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'No log packets found!!!')
             return {}
@@ -707,6 +736,7 @@ class PostProcessingUtils(object):
         self.fileExt = ''
         self.dirs = []
         self.workingDir = ''
+        self.sid = ''
         self.pktFilter = []
         self.pktCodeFormat = ''
         self.defaultPacketFilter = []
