@@ -91,10 +91,10 @@ class PostProcessingUtils(object):
             if (sysArgv[1].find('-?')) > -1 or (sysArgv[1].find('-h') > -1) or (sysArgv[1].find('-help') > -1):
                 sys.exit('(PostProcessingUtils/getArgv) ' + 'Command syntax: python <py file name> <log directory> <log packet codes>')
             else:
-                self.workingDir = sysArgv[1]
+                self.workingDir = sysArgv[1] # Get current working dir from Argv
                 logPacketFitler = []
                 logEventFitler = []
-                for n in range(2, len(sysArgv)):
+                for n in range(2, len(sysArgv)): # Get log code/qtrace indicator/sub ID
                     if self.pktCodeFormat.match(str(sysArgv[n])):
                         logId = int(str(sysArgv[n]), 16)
                         self.pktFilter.append(logId)
@@ -188,27 +188,27 @@ class PostProcessingUtils(object):
 
         currentLogPkts = []
         formatFound = ''
-        for file in self.files:
+        for file in self.files: # Open filtered text files with log pkt info
             logPkt = LogPacket()
             fileLines = []
-            openedFile = open(file, 'r')
+            openedFile = open(file, 'r') 
             fileLines = openedFile.readlines()
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/initLogPacketList) ' + 'FILE = ' + file)
             openedFile.close()
 
-            for index, line in enumerate(fileLines):
-                if index == len(fileLines) - 1:
+            for index, line in enumerate(fileLines): # Check each line in current text file, init logPacket with log info
+                if index == len(fileLines) - 1: # If reach the EOF, save current logPkt obj
                     currentLogPkts.append(logPkt)
                     logPkt = LogPacket()
                     break
-                if line == '\n' or line.isspace():
+                if line == '\n' or line.isspace(): # Skip empty lines
                     continue
                 else:
                     line = line.strip()
-                    if (len(line) == 1 and (line == '{' or line == '}')) or (len(line) == 2 and line == '},'):
+                    if (len(line) == 1 and (line == '{' or line == '}')) or (len(line) == 2 and line == '},'): # Skip lines with no valid info
                         continue 
-                    if self.logPacketFormat['headlineFormat'].match(line):
-                        if len(logPkt.getHeadline()) != 0:
+                    if self.logPacketFormat['headlineFormat'].match(line): # Find the headline of log packet
+                        if len(logPkt.getHeadline()) != 0: # If logPkt already has headline (initialized), save current logPacket instance and init new instance
                             currentLogPkts.append(logPkt)
                             '''print('(PostProcessingUtils/initLogPacketList) ' + 'Headline: ' + logPkt.getHeadline())
                             print('(PostProcessingUtils/initLogPacketList) ' + 'Timestamp: ' + logPkt.getTimestamp())
@@ -235,7 +235,7 @@ class PostProcessingUtils(object):
                         line = line.strip()
                         logPkt.setContent(line)
             
-            if len(currentLogPkts) > 0:
+            if len(currentLogPkts) > 0: # All pkts initialized for current file
                 self.logPackets[os.path.split(file)[1]] = currentLogPkts
             currentLogPkts = []
         #print('(PostProcessingUtils/initLogPacketList) ' + 'KEYS: ',  self.logPackets.keys())
@@ -245,25 +245,25 @@ class PostProcessingUtils(object):
     def getLogPacketList(self):
         
         if len(self.logPackets) > 0:
-            if self.sid == '0':
+            if self.sid == '0': # if sub Id not specified, return all pkts
                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'SubId not specified, getting logPkts for both subs')
                 return self.logPackets
-            elif self.sid == '1':
+            elif self.sid == '1': # if sub1 specified, return sub1 pkts only
                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'Getting logPkts for sub1')
                 logPackets_sub1 = {}
                 for key in self.logPackets.keys():
                     logPackets_sub1[key] = []
                     for log in self.logPackets[key]:
-                        if log.getSubID() == self.sid:
+                        if log.getSubID() == self.sid: # Check if subID == 1
                             logPackets_sub1[key].append(log)
                 return logPackets_sub1
-            elif self.sid == '2':
+            elif self.sid == '2': # if sub2 specified, return sub2 pkts only
                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'Getting logPkts for sub2')
                 logPackets_sub2 = {}
                 for key in self.logPackets.keys():
                     logPackets_sub2[key] = []
                     for log in self.logPackets[key]:
-                        if log.getSubID() == self.sid:
+                        if log.getSubID() == self.sid: # Check if subID == 2
                             logPackets_sub2[key].append(log)
                 return logPackets_sub2
             else:
@@ -406,26 +406,26 @@ class PostProcessingUtils(object):
         
         for key in self.logPackets.keys():
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Searching keywords in: ' + key)  
-            f.write('########## ' + key + ' ##########\n')
-            for kw in self.keywords:
+            f.write('########## ' + key + ' ##########\n') # Print log name before keyword search result
+            for kw in self.keywords: # Initialize search result for each keyword
                 kw_summary[kw] = 0
             for logPkt in self.logPackets[key]:
                 for kw in self.keywords:
-                    if kw in logPkt.getHeadline():
+                    if kw in logPkt.getHeadline(): # Search keywords in log headline
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
-                        f.write(logPkt.getTimestamp() + ' ' + logPkt.getTitle() + '\n')
+                        f.write(logPkt.getTimestamp() + ' ' + logPkt.getTitle() + '\n') # Print the line with keywords in search result
                         kw_summary[kw] += 1
                 logContent = logPkt.getContent()
                 for contentLine in logContent:
-                    for kw in self.keywords:
-                        if kw in contentLine:
+                    for kw in self.keywords: 
+                        if kw in contentLine: # Search keywords in each content line
                             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
-                            f.write(logPkt.getTimestamp() + ' ' + contentLine + '\n')
+                            f.write(logPkt.getTimestamp() + ' ' + contentLine + '\n') # Print the line with keywords in search result
                             kw_summary[kw] += 1
                             continue
             f.write('\n')
             for key in kw_summary.keys():
-                f.write('-----Found ' + str(kw_summary[key]) + " '" + key + "' " + '\n')
+                f.write('-----Found ' + str(kw_summary[key]) + " '" + key + "' " + '\n') # Print final search result in current log
             f.write('\n')
         f.close()
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Search keywords completed!')
