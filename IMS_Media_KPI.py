@@ -3,20 +3,27 @@
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 
 from PostProcessingUtils import LogPacket, LogPacket_RTP, LogPacket_Talkspurt, PostProcessingUtils
+from FilterMask import *
 from openpyxl import Workbook
 from datetime import datetime
 import sys
 import os
 import re
 
+filter_mask[LOG_FILTER] = [0xB821, 0x1568, 0x1569, 0x156A, 
+                           0x156C, 0xB800, 0xB801, 0xB808, 
+                           0xB809, 0xB80A, 0xB80B, 0xB814, 
+                           0xB890, 0x1CD0]
+filter_mask[EVENT_FILTER] = [3188, 3190]
+
 # Convert log to text file with default filter
 IMS_KPI = PostProcessingUtils()
 IMS_KPI.getArgv(sys.argv)
 IMS_KPI.scanWorkingDir() # default is .hdf
 if not IMS_KPI.skipFitlerLogs():
-    IMS_KPI.convertToText()
+    IMS_KPI.convertToText('IMS_Media_KPI')
 # Initialize log pkt list from filtered text files
-IMS_KPI.scanWorkingDir('_flt_text.txt')
+IMS_KPI.scanWorkingDir('_flt_text.txt', 'IMS_Media_KPI')
 IMS_KPI.initLogPacketList()
 logPktList_All_Logs = IMS_KPI.getLogPacketList()
 logPktList_All_TS_Logs = {}

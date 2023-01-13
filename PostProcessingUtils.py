@@ -120,11 +120,11 @@ class PostProcessingUtils(object):
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'Invalid log code or sub ID format: ' + str(sysArgv[n]))
                         continue
                 if len(self.pktFilter) == 0:
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'No packet filter found!')
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'No packet filter specified!')
                 else:
                     print(datetime.now().strftime("%H:%M:%S"),  '(PostProcessingUtils/getArgv) ' + 'Packet filter: ', logPacketFitler)
                 if len(self.eventFilter) == 0:
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'No event filter found!')
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'No event filter specified!')
                 else:
                     print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'Event filter: ', logEventFitler)
                 if self.isQtrace:
@@ -140,7 +140,7 @@ class PostProcessingUtils(object):
             sys.exit('(PostProcessingUtils/getArgv) ' + 'Error: Directory does not exist --- ' + self.workingDir)
 
     ### Scan dirs and get files (including .awsi) to be processed with given extension, by defualt fileExt is set to .hdf ###
-    def scanWorkingDir(self, fileExt = '.hdf'):
+    def scanWorkingDir(self, fileExt = '.hdf', flt_file_marker = ''):
 
         self.fileExt = fileExt # override fileExt if needed
         self.files = [] # Clear old files before new scan
@@ -155,7 +155,7 @@ class PostProcessingUtils(object):
         # Get files and dirs from working directory, scan for .awsi grid files
         for path, dirs, files in os.walk(os.path.abspath(self.workingDir)):
             for file in files:
-                if file.endswith(self.fileExt):
+                if file.endswith(self.fileExt) and (flt_file_marker == '' or flt_file_marker in file):
                     self.files.append(os.path.join(path, file))
                     print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + self.fileExt + ' file found: ' + str(file))
                 elif file.endswith('.awsi') or file.endswith('.aws'):
@@ -286,7 +286,7 @@ class PostProcessingUtils(object):
 
 
     ### Apply filters and convert QXDM logs to txt files ###
-    def convertToText(self):
+    def convertToText(self, flt_file_marker = ''):
         
         # Check if logs are found and filter is applied
         noPacketFitler = False
@@ -295,10 +295,10 @@ class PostProcessingUtils(object):
         if self.fileExt != '.hdf' or len(self.files) == 0:
             sys.exit('(PostProcessingUtils/convertToText) ' + 'No .hdf logs found, please check path or fileExt')
         if len(self.pktFilter) == 0:
-            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'No packet filters applied!')
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'No packet filters specified!')
             noPacketFitler = True
         if len(self.eventFilter) == 0:
-            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'No event filters applied!')
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'No event filters specified!')
             noEventFitler = True
         if self.isQtrace:
             self.qtraceFilterStringList = {0: self.qtraceFilterStringListNonRegex, 1: self.qtraceFilterStringListRegex}
@@ -319,7 +319,9 @@ class PostProcessingUtils(object):
         # Open logs, set log filter and convert to text
         for logFile in self.files:
                 if logFile.endswith('.hdf'):
-                    outputTextFile = logFile.replace('.hdf', '_flt_text.txt')
+                    dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    saveFileTail = '_' + flt_file_marker + '_' + dt_string + '_flt_text.txt'
+                    outputTextFile = logFile.replace('.hdf', saveFileTail)
                     apex.SetAll('PacketFilter', 0)
                     apex.SetAll('EventFitler', 0)
                     # Set log filter
@@ -335,7 +337,7 @@ class PostProcessingUtils(object):
                                     print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid packet code: ', hex(filter))
                     elif self.isQtrace:
                         if firstTimeRun:
-                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace enabled and no pacekets specified, default packet filter will NOT be applied!!!')
+                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace enabled and no packets specified, default packet filter will NOT be applied!!!')
                     else:                        
                         if firstTimeRun:
                             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default packet filter!')

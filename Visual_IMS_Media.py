@@ -12,8 +12,8 @@ Visual_IMS = PostProcessingUtils()
 Visual_IMS.getArgv(sys.argv)
 Visual_IMS.scanWorkingDir()
 if not Visual_IMS.skipFitlerLogs():
-    Visual_IMS.convertToText()
-Visual_IMS.scanWorkingDir('_flt_text.txt')
+    Visual_IMS.convertToText('Visual_IMS_Media')
+Visual_IMS.scanWorkingDir('_flt_text.txt', 'Visual_IMS_Media')
 Visual_IMS.initLogPacketList()
 LogPkt_All = Visual_IMS.getLogPacketList()
 RTP_LogPkt_All = {}

@@ -11,8 +11,8 @@ RF_Profile = PostProcessingUtils()
 RF_Profile.getArgv(sys.argv)
 RF_Profile.scanWorkingDir()
 if not RF_Profile.skipFitlerLogs():
-    RF_Profile.convertToText()
-RF_Profile.scanWorkingDir('_flt_text.txt')
+    RF_Profile.convertToText('RF_Profile_Histograms')
+RF_Profile.scanWorkingDir('_flt_text.txt', 'RF_Profile_Histograms')
 RF_Profile.initLogPacketList()
 LogPkt_All = RF_Profile.getLogPacketList()
 
