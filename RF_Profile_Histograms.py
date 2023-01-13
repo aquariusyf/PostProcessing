@@ -10,7 +10,8 @@ filter_mask[LOG_FILTER] = [0xB821, 0xB8DD]
 RF_Profile = PostProcessingUtils()
 RF_Profile.getArgv(sys.argv)
 RF_Profile.scanWorkingDir()
-RF_Profile.convertToText()
+if not RF_Profile.skipFitlerLogs():
+    RF_Profile.convertToText()
 RF_Profile.scanWorkingDir('_flt_text.txt')
 RF_Profile.initLogPacketList()
 LogPkt_All = RF_Profile.getLogPacketList()

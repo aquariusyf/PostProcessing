@@ -13,7 +13,8 @@ import re
 IMS_KPI = PostProcessingUtils()
 IMS_KPI.getArgv(sys.argv)
 IMS_KPI.scanWorkingDir() # default is .hdf
-IMS_KPI.convertToText()
+if not IMS_KPI.skipFitlerLogs():
+    IMS_KPI.convertToText()
 # Initialize log pkt list from filtered text files
 IMS_KPI.scanWorkingDir('_flt_text.txt')
 IMS_KPI.initLogPacketList()

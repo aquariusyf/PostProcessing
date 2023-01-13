@@ -3,6 +3,7 @@
 #  * getArgv ----- Get inputs from command line (ARGV[1] = log path, ARGV[1 + n] = log packet code or qtrace indicator or sub ID)
 #  * scanWorkingDir ----- Scan the path for files (or given type, .hdf by default) and dirs
 #  * getFilesPath ----- Getter of files path in the working directory with given extension
+#  * skipFitlerLogs ----- Get skip filter flag, will skip filtering logs if True
 #  * initLogPacketList ----- Initializing the packet list extracted from text files
 #  * getLogPacketList ----- Getter of log packet list
 #  * convertToText ----- Convert .hdf logs to text files with given log or qtrace filter
@@ -60,6 +61,7 @@ class PostProcessingUtils(object):
     
     ### Constructor ###
     def __init__(self, filterMask = filter_mask):
+        self.skipFilterLog = False
         self.files = []
         self.fileExt = '.hdf' # default = .hdf
         self.dirs = []
@@ -103,12 +105,17 @@ class PostProcessingUtils(object):
                         eventId = int(str(sysArgv[n]), 10)
                         self.eventFilter.append(eventId)
                         logEventFitler.append(eventId)
+                    elif str(sysArgv[n]) == '-sf':
+                        self.skipFilterLog = True
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + '-sf flag received, will skip filtering logs!')
                     elif str(sysArgv[n]) == 'qtrace':
                         self.isQtrace = True
                     elif str(sysArgv[n]) == 'sub1':
                         self.sid = '1'
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'sub1 indicator received!')
                     elif str(sysArgv[n]) == 'sub2':
                         self.sid = '2'
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'sub2 indicator received!')
                     else:
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'Invalid log code or sub ID format: ' + str(sysArgv[n]))
                         continue
@@ -178,6 +185,10 @@ class PostProcessingUtils(object):
     ### Getter of files in the working directory with given extension ###
     def getFilesPath(self):
         return self.files
+    
+    ### Get skip filter flag, will skip filtering logs if True ###
+    def skipFitlerLogs(self):
+        return self.skipFilterLog
 
     ### Initialize log packet list, get log info from text file ###
     def initLogPacketList(self):
@@ -732,6 +743,7 @@ class PostProcessingUtils(object):
 
     ### Destructor ###
     def __del__(self):
+        self.skipFilterLog = False
         self.files = []
         self.fileExt = ''
         self.dirs = []

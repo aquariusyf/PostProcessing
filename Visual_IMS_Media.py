@@ -11,7 +11,8 @@ filter_mask[LOG_FILTER] = [0xB821, 0x1568, 0x1569, 0x156A, 0x156C, 0xB800, 0xB80
 Visual_IMS = PostProcessingUtils()
 Visual_IMS.getArgv(sys.argv)
 Visual_IMS.scanWorkingDir()
-Visual_IMS.convertToText()
+if not Visual_IMS.skipFitlerLogs():
+    Visual_IMS.convertToText()
 Visual_IMS.scanWorkingDir('_flt_text.txt')
 Visual_IMS.initLogPacketList()
 LogPkt_All = Visual_IMS.getLogPacketList()
