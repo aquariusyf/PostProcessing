@@ -1,11 +1,11 @@
 from PostProcessingUtils import PostProcessingUtils, LogPacket_RSRP_SNR
 from FilterMask import *
-from datetime import datetime
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
 filter_mask[LOG_FILTER] = [0xB821, 0xB8DD]
+filter_mask[EVENT_FILTER] = [3188, 3190]
 
 RF_Profile = PostProcessingUtils()
 RF_Profile.getArgv(sys.argv)
@@ -43,30 +43,62 @@ Y_HO_START = 'y_HO_start'
 X_HO_SUC = 'x_HO_suc'
 Y_HO_SUC = 'y_HO_suc'
 
-RSRP_70 = 'RSRP > -70'
-RSRP_70_85 = '-70 > RSRP > -85'
-RSRP_85_95 = '-85 > RSRP > -95'
-RSRP_95_105 = '-95 > RSRP > -105'
-RSRP_105_120 = '-105 > RSRP > -120'
+RSRP_60 = 'RSRP > -60'
+RSRP_60_65 = '-60 > RSRP > -65'
+RSRP_65_70 = '-65 > RSRP > -70'
+RSRP_70_75 = '-70 > RSRP > -75'
+RSRP_75_80 = '-75 > RSRP > -80'
+RSRP_80_85 = '-80 > RSRP > -85'
+RSRP_85_90 = '-85 > RSRP > -90'
+RSRP_90_95 = '-90 > RSRP > -95'
+RSRP_95_100 = '-95 > RSRP > -100'
+RSRP_100_105 = '-100 > RSRP > -105'
+RSRP_105_110 = '-105 > RSRP > -110'
+RSRP_110_115 = '-110 > RSRP > -115'
+RSRP_115_120 = '-115 > RSRP > -120'
 RSRP_120 = 'RSRP < -120'
 
-SNR_20 = 'SNR > 20'
-SNR_15_20 = '15 > SNR > 20'
-SNR_10_15 = '10 > SNR > 15'
-SNR_5_10 = '5 > SNR > 10'
-SNR_0_5 = '0 > SNR > 5'
-SNR_0 = 'SNR < 0'
+SNR_30 = 'SNR > 30'
+SNR_30_27 = '27 > SNR > 30'
+SNR_27_24 = '24 > SNR > 27'
+SNR_24_21 = '21 > SNR > 24'
+SNR_21_18 = '18 > SNR > 21'
+SNR_18_15 = '15 > SNR > 18'
+SNR_15_12 = '12 > SNR > 15'
+SNR_12_9 = '9 > SNR > 12'
+SNR_9_6 = '6 > SNR > 9'
+SNR_6_3 = '3 > SNR > 6'
+SNR_3_0 = '0 > SNR > 3'
+SNR_0_n3 = '0 > SNR > -3'
+SNR_n3_n6 = '-3 > SNR > -6'
+SNR_n6 = 'SNR < -6'
 
+RSRP_THRES_60 = -60
+RSRP_THRES_65 = -65
 RSRP_THRES_70 = -70
+RSRP_THRES_75 = -75
+RSRP_THRES_80 = -80
 RSRP_THRES_85 = -85
+RSRP_THRES_90 = -90
 RSRP_THRES_95 = -95
+RSRP_THRES_100 = -100
 RSRP_THRES_105 = -105
+RSRP_THRES_110 = -110
+RSRP_THRES_115 = -115
 RSRP_THRES_120 = -120
-SNR_THRES_20 = 20
+SNR_THRES_30 = 30
+SNR_THRES_27 = 27
+SNR_THRES_24 = 24
+SNR_THRES_21 = 21
+SNR_THRES_18 = 18
 SNR_THRES_15 = 15
-SNR_THRES_10 = 10
-SNR_THRES_5 = 5
+SNR_THRES_12 = 12
+SNR_THRES_9 = 9
+SNR_THRES_6 = 6
+SNR_THRES_3 = 3
 SNR_THRES_0 = 0
+SNR_THRES_n3 = -3
+SNR_THRES_n6 = -6
 
 Plot_Attr_TD = {X_RX0_RSRP: [], Y_RX0_RSRP: [],
                 X_RX1_RSRP: [], Y_RX1_RSRP: [],
@@ -79,13 +111,22 @@ Plot_Attr_TD = {X_RX0_RSRP: [], Y_RX0_RSRP: [],
                 X_HO_START: [], Y_HO_START: [],                        
                 X_HO_SUC: [], Y_HO_SUC: []}
 
-RSRP_Histogram_Attr = {RSRP_70: 0, RSRP_70_85: 0, RSRP_85_95: 0, RSRP_95_105: 0, RSRP_105_120: 0, RSRP_120: 0}
-SNR_Histogram_Attr = {SNR_20: 0, SNR_15_20: 0, SNR_10_15: 0, SNR_5_10: 0, SNR_0_5: 0, SNR_0: 0}
+RSRP_Histogram_Attr = {RSRP_60: 0, RSRP_60_65: 0, RSRP_65_70: 0, RSRP_70_75: 0, 
+                       RSRP_75_80: 0, RSRP_80_85: 0, RSRP_85_90: 0, RSRP_90_95: 0,
+                       RSRP_95_100: 0, RSRP_100_105: 0, RSRP_105_110: 0, RSRP_110_115: 0,
+                       RSRP_115_120: 0, RSRP_120: 0}
+SNR_Histogram_Attr = {SNR_30: 0, SNR_30_27: 0, SNR_27_24: 0, SNR_24_21: 0,
+                      SNR_21_18: 0, SNR_18_15: 0, SNR_15_12: 0, SNR_12_9: 0,
+                      SNR_9_6: 0, SNR_6_3: 0, SNR_3_0: 0, SNR_0_n3: 0,
+                      SNR_n3_n6: 0, SNR_n6: 0}
+
+TotalNumHO = 0
 
 figure, axis = plt.subplots(3, 1)
 TD_plot = axis[0]
 Histogram_RSRP = axis[1]
 Histogram_SNR = axis[2]
+figure.tight_layout()
 
 for key in LogPkt_All.keys():
     B8DD_Pkt_List = []
@@ -98,7 +139,8 @@ for key in LogPkt_All.keys():
         elif pkt.getTitle() == 'Event  --  EVENT_NR5G_RRC_HO_SUCCESS':
             Plot_Attr_TD[Y_HO_SUC].append(HO_SUC)
             Plot_Attr_TD[X_HO_SUC].append(pkt.getTimestamp())
-
+            TotalNumHO += 1
+    
     for b8dd_pkt in B8DD_Pkt_List:
         rsrp = b8dd_pkt.getRSRP()
         snr = b8dd_pkt.getSNR()
@@ -130,119 +172,253 @@ for key in LogPkt_All.keys():
             Plot_Attr_TD[X_RX3_SNR].append(b8dd_pkt.getTimestamp())
 
 for value in Plot_Attr_TD[Y_RX0_RSRP]:
-    if value >= RSRP_THRES_70:
-        RSRP_Histogram_Attr[RSRP_70] += 1
-    elif value < RSRP_THRES_70 and value >= RSRP_THRES_85:
-        RSRP_Histogram_Attr[RSRP_70_85] += 1
-    elif value < RSRP_THRES_85 and value >= RSRP_THRES_95:
-        RSRP_Histogram_Attr[RSRP_85_95] += 1
-    elif value < RSRP_THRES_95 and value >= RSRP_THRES_105:
-        RSRP_Histogram_Attr[RSRP_95_105] += 1
-    elif value < RSRP_THRES_105 and value >= RSRP_THRES_120:
-        RSRP_Histogram_Attr[RSRP_105_120] += 1
+    if value >= RSRP_THRES_60:
+        RSRP_Histogram_Attr[RSRP_60] += 1
+    elif value < RSRP_THRES_60 and value >= RSRP_THRES_65:
+        RSRP_Histogram_Attr[RSRP_60_65] += 1
+    elif value < RSRP_THRES_65 and value >= RSRP_THRES_70:
+        RSRP_Histogram_Attr[RSRP_65_70] += 1
+    elif value < RSRP_THRES_70 and value >= RSRP_THRES_75:
+        RSRP_Histogram_Attr[RSRP_70_75] += 1
+    elif value < RSRP_THRES_75 and value >= RSRP_THRES_80:
+        RSRP_Histogram_Attr[RSRP_75_80] += 1
+    elif value < RSRP_THRES_80 and value >= RSRP_THRES_85:
+        RSRP_Histogram_Attr[RSRP_80_85] += 1
+    elif value < RSRP_THRES_85 and value >= RSRP_THRES_90:
+        RSRP_Histogram_Attr[RSRP_85_90] += 1      
+    elif value < RSRP_THRES_90 and value >= RSRP_THRES_95:
+        RSRP_Histogram_Attr[RSRP_90_95] += 1
+    elif value < RSRP_THRES_95 and value >= RSRP_THRES_100:
+        RSRP_Histogram_Attr[RSRP_95_100] += 1
+    elif value < RSRP_THRES_100 and value >= RSRP_THRES_105:
+        RSRP_Histogram_Attr[RSRP_100_105] += 1
+    elif value < RSRP_THRES_105 and value >= RSRP_THRES_110:
+        RSRP_Histogram_Attr[RSRP_105_110] += 1
+    elif value < RSRP_THRES_110 and value >= RSRP_THRES_115:
+        RSRP_Histogram_Attr[RSRP_110_115] += 1
+    elif value < RSRP_THRES_115 and value >= RSRP_THRES_120:
+        RSRP_Histogram_Attr[RSRP_115_120] += 1
     elif value < RSRP_THRES_120:
         RSRP_Histogram_Attr[RSRP_120] += 1
         
 for value in Plot_Attr_TD[Y_RX1_RSRP]:
-    if value >= RSRP_THRES_70:
-        RSRP_Histogram_Attr[RSRP_70] += 1
-    elif value < RSRP_THRES_70 and value >= RSRP_THRES_85:
-        RSRP_Histogram_Attr[RSRP_70_85] += 1
-    elif value < RSRP_THRES_85 and value >= RSRP_THRES_95:
-        RSRP_Histogram_Attr[RSRP_85_95] += 1
-    elif value < RSRP_THRES_95 and value >= RSRP_THRES_105:
-        RSRP_Histogram_Attr[RSRP_95_105] += 1
-    elif value < RSRP_THRES_105 and value >= RSRP_THRES_120:
-        RSRP_Histogram_Attr[RSRP_105_120] += 1
+    if value >= RSRP_THRES_60:
+        RSRP_Histogram_Attr[RSRP_60] += 1
+    elif value < RSRP_THRES_60 and value >= RSRP_THRES_65:
+        RSRP_Histogram_Attr[RSRP_60_65] += 1
+    elif value < RSRP_THRES_65 and value >= RSRP_THRES_70:
+        RSRP_Histogram_Attr[RSRP_65_70] += 1
+    elif value < RSRP_THRES_70 and value >= RSRP_THRES_75:
+        RSRP_Histogram_Attr[RSRP_70_75] += 1
+    elif value < RSRP_THRES_75 and value >= RSRP_THRES_80:
+        RSRP_Histogram_Attr[RSRP_75_80] += 1
+    elif value < RSRP_THRES_80 and value >= RSRP_THRES_85:
+        RSRP_Histogram_Attr[RSRP_80_85] += 1
+    elif value < RSRP_THRES_85 and value >= RSRP_THRES_90:
+        RSRP_Histogram_Attr[RSRP_85_90] += 1      
+    elif value < RSRP_THRES_90 and value >= RSRP_THRES_95:
+        RSRP_Histogram_Attr[RSRP_90_95] += 1
+    elif value < RSRP_THRES_95 and value >= RSRP_THRES_100:
+        RSRP_Histogram_Attr[RSRP_95_100] += 1
+    elif value < RSRP_THRES_100 and value >= RSRP_THRES_105:
+        RSRP_Histogram_Attr[RSRP_100_105] += 1
+    elif value < RSRP_THRES_105 and value >= RSRP_THRES_110:
+        RSRP_Histogram_Attr[RSRP_105_110] += 1
+    elif value < RSRP_THRES_110 and value >= RSRP_THRES_115:
+        RSRP_Histogram_Attr[RSRP_110_115] += 1
+    elif value < RSRP_THRES_115 and value >= RSRP_THRES_120:
+        RSRP_Histogram_Attr[RSRP_115_120] += 1
     elif value < RSRP_THRES_120:
         RSRP_Histogram_Attr[RSRP_120] += 1
         
 for value in Plot_Attr_TD[Y_RX2_RSRP]:
-    if value >= RSRP_THRES_70:
-        RSRP_Histogram_Attr[RSRP_70] += 1
-    elif value < RSRP_THRES_70 and value >= RSRP_THRES_85:
-        RSRP_Histogram_Attr[RSRP_70_85] += 1
-    elif value < RSRP_THRES_85 and value >= RSRP_THRES_95:
-        RSRP_Histogram_Attr[RSRP_85_95] += 1
-    elif value < RSRP_THRES_95 and value >= RSRP_THRES_105:
-        RSRP_Histogram_Attr[RSRP_95_105] += 1
-    elif value < RSRP_THRES_105 and value >= RSRP_THRES_120:
-        RSRP_Histogram_Attr[RSRP_105_120] += 1
+    if value >= RSRP_THRES_60:
+        RSRP_Histogram_Attr[RSRP_60] += 1
+    elif value < RSRP_THRES_60 and value >= RSRP_THRES_65:
+        RSRP_Histogram_Attr[RSRP_60_65] += 1
+    elif value < RSRP_THRES_65 and value >= RSRP_THRES_70:
+        RSRP_Histogram_Attr[RSRP_65_70] += 1
+    elif value < RSRP_THRES_70 and value >= RSRP_THRES_75:
+        RSRP_Histogram_Attr[RSRP_70_75] += 1
+    elif value < RSRP_THRES_75 and value >= RSRP_THRES_80:
+        RSRP_Histogram_Attr[RSRP_75_80] += 1
+    elif value < RSRP_THRES_80 and value >= RSRP_THRES_85:
+        RSRP_Histogram_Attr[RSRP_80_85] += 1
+    elif value < RSRP_THRES_85 and value >= RSRP_THRES_90:
+        RSRP_Histogram_Attr[RSRP_85_90] += 1      
+    elif value < RSRP_THRES_90 and value >= RSRP_THRES_95:
+        RSRP_Histogram_Attr[RSRP_90_95] += 1
+    elif value < RSRP_THRES_95 and value >= RSRP_THRES_100:
+        RSRP_Histogram_Attr[RSRP_95_100] += 1
+    elif value < RSRP_THRES_100 and value >= RSRP_THRES_105:
+        RSRP_Histogram_Attr[RSRP_100_105] += 1
+    elif value < RSRP_THRES_105 and value >= RSRP_THRES_110:
+        RSRP_Histogram_Attr[RSRP_105_110] += 1
+    elif value < RSRP_THRES_110 and value >= RSRP_THRES_115:
+        RSRP_Histogram_Attr[RSRP_110_115] += 1
+    elif value < RSRP_THRES_115 and value >= RSRP_THRES_120:
+        RSRP_Histogram_Attr[RSRP_115_120] += 1
     elif value < RSRP_THRES_120:
         RSRP_Histogram_Attr[RSRP_120] += 1
         
 for value in Plot_Attr_TD[Y_RX3_RSRP]:
-    if value >= RSRP_THRES_70:
-        RSRP_Histogram_Attr[RSRP_70] += 1
-    elif value < RSRP_THRES_70 and value >= RSRP_THRES_85:
-        RSRP_Histogram_Attr[RSRP_70_85] += 1
-    elif value < RSRP_THRES_85 and value >= RSRP_THRES_95:
-        RSRP_Histogram_Attr[RSRP_85_95] += 1
-    elif value < RSRP_THRES_95 and value >= RSRP_THRES_105:
-        RSRP_Histogram_Attr[RSRP_95_105] += 1
-    elif value < RSRP_THRES_105 and value >= RSRP_THRES_120:
-        RSRP_Histogram_Attr[RSRP_105_120] += 1
+    if value >= RSRP_THRES_60:
+        RSRP_Histogram_Attr[RSRP_60] += 1
+    elif value < RSRP_THRES_60 and value >= RSRP_THRES_65:
+        RSRP_Histogram_Attr[RSRP_60_65] += 1
+    elif value < RSRP_THRES_65 and value >= RSRP_THRES_70:
+        RSRP_Histogram_Attr[RSRP_65_70] += 1
+    elif value < RSRP_THRES_70 and value >= RSRP_THRES_75:
+        RSRP_Histogram_Attr[RSRP_70_75] += 1
+    elif value < RSRP_THRES_75 and value >= RSRP_THRES_80:
+        RSRP_Histogram_Attr[RSRP_75_80] += 1
+    elif value < RSRP_THRES_80 and value >= RSRP_THRES_85:
+        RSRP_Histogram_Attr[RSRP_80_85] += 1
+    elif value < RSRP_THRES_85 and value >= RSRP_THRES_90:
+        RSRP_Histogram_Attr[RSRP_85_90] += 1      
+    elif value < RSRP_THRES_90 and value >= RSRP_THRES_95:
+        RSRP_Histogram_Attr[RSRP_90_95] += 1
+    elif value < RSRP_THRES_95 and value >= RSRP_THRES_100:
+        RSRP_Histogram_Attr[RSRP_95_100] += 1
+    elif value < RSRP_THRES_100 and value >= RSRP_THRES_105:
+        RSRP_Histogram_Attr[RSRP_100_105] += 1
+    elif value < RSRP_THRES_105 and value >= RSRP_THRES_110:
+        RSRP_Histogram_Attr[RSRP_105_110] += 1
+    elif value < RSRP_THRES_110 and value >= RSRP_THRES_115:
+        RSRP_Histogram_Attr[RSRP_110_115] += 1
+    elif value < RSRP_THRES_115 and value >= RSRP_THRES_120:
+        RSRP_Histogram_Attr[RSRP_115_120] += 1
     elif value < RSRP_THRES_120:
         RSRP_Histogram_Attr[RSRP_120] += 1
         
 for value in Plot_Attr_TD[Y_RX0_SNR]:
-    if value >= SNR_THRES_20:
-        SNR_Histogram_Attr[SNR_20] += 1
-    elif value < SNR_THRES_20 and value >= SNR_THRES_15:
-        SNR_Histogram_Attr[SNR_15_20] += 1
-    elif value < SNR_THRES_15 and value >= SNR_THRES_10:
-        SNR_Histogram_Attr[SNR_10_15] += 1
-    elif value < SNR_THRES_10 and value >= SNR_THRES_5:
-        SNR_Histogram_Attr[SNR_5_10] += 1
-    elif value < SNR_THRES_5 and value >= SNR_THRES_0:
-        SNR_Histogram_Attr[SNR_0_5] += 1
-    elif value < SNR_THRES_0:
-        SNR_Histogram_Attr[SNR_0] += 1
+    if value >= SNR_THRES_30:
+        SNR_Histogram_Attr[SNR_30] += 1
+    elif value < SNR_THRES_30 and value >= SNR_THRES_27:
+        SNR_Histogram_Attr[SNR_30_27] += 1
+    elif value < SNR_THRES_27 and value >= SNR_THRES_24:
+        SNR_Histogram_Attr[SNR_27_24] += 1
+    elif value < SNR_THRES_24 and value >= SNR_THRES_21:
+        SNR_Histogram_Attr[SNR_24_21] += 1
+    elif value < SNR_THRES_21 and value >= SNR_THRES_18:
+        SNR_Histogram_Attr[SNR_21_18] += 1
+    elif value < SNR_THRES_18 and value >= SNR_THRES_15:
+        SNR_Histogram_Attr[SNR_18_15] += 1
+    elif value < SNR_THRES_15 and value >= SNR_THRES_12:
+        SNR_Histogram_Attr[SNR_15_12] += 1
+    elif value < SNR_THRES_12 and value >= SNR_THRES_9:
+        SNR_Histogram_Attr[SNR_12_9] += 1
+    elif value < SNR_THRES_9 and value >= SNR_THRES_6:
+        SNR_Histogram_Attr[SNR_9_6] += 1
+    elif value < SNR_THRES_6 and value >= SNR_THRES_3:
+        SNR_Histogram_Attr[SNR_6_3] += 1
+    elif value < SNR_THRES_3 and value >= SNR_THRES_0:
+        SNR_Histogram_Attr[SNR_3_0] += 1
+    elif value < SNR_THRES_0 and value >= SNR_THRES_n3:
+        SNR_Histogram_Attr[SNR_0_n3] += 1
+    elif value < SNR_THRES_n3 and value >= SNR_THRES_n6:
+        SNR_Histogram_Attr[SNR_n3_n6] += 1
+    elif value < SNR_THRES_n6:
+        SNR_Histogram_Attr[SNR_n6] += 1
         
 for value in Plot_Attr_TD[Y_RX1_SNR]:
-    if value >= SNR_THRES_20:
-        SNR_Histogram_Attr[SNR_20] += 1
-    elif value < SNR_THRES_20 and value >= SNR_THRES_15:
-        SNR_Histogram_Attr[SNR_15_20] += 1
-    elif value < SNR_THRES_15 and value >= SNR_THRES_10:
-        SNR_Histogram_Attr[SNR_10_15] += 1
-    elif value < SNR_THRES_10 and value >= SNR_THRES_5:
-        SNR_Histogram_Attr[SNR_5_10] += 1
-    elif value < SNR_THRES_5 and value >= SNR_THRES_0:
-        SNR_Histogram_Attr[SNR_0_5] += 1
-    elif value < SNR_THRES_0:
-        SNR_Histogram_Attr[SNR_0] += 1
+    if value >= SNR_THRES_30:
+        SNR_Histogram_Attr[SNR_30] += 1
+    elif value < SNR_THRES_30 and value >= SNR_THRES_27:
+        SNR_Histogram_Attr[SNR_30_27] += 1
+    elif value < SNR_THRES_27 and value >= SNR_THRES_24:
+        SNR_Histogram_Attr[SNR_27_24] += 1
+    elif value < SNR_THRES_24 and value >= SNR_THRES_21:
+        SNR_Histogram_Attr[SNR_24_21] += 1
+    elif value < SNR_THRES_21 and value >= SNR_THRES_18:
+        SNR_Histogram_Attr[SNR_21_18] += 1
+    elif value < SNR_THRES_18 and value >= SNR_THRES_15:
+        SNR_Histogram_Attr[SNR_18_15] += 1
+    elif value < SNR_THRES_15 and value >= SNR_THRES_12:
+        SNR_Histogram_Attr[SNR_15_12] += 1
+    elif value < SNR_THRES_12 and value >= SNR_THRES_9:
+        SNR_Histogram_Attr[SNR_12_9] += 1
+    elif value < SNR_THRES_9 and value >= SNR_THRES_6:
+        SNR_Histogram_Attr[SNR_9_6] += 1
+    elif value < SNR_THRES_6 and value >= SNR_THRES_3:
+        SNR_Histogram_Attr[SNR_6_3] += 1
+    elif value < SNR_THRES_3 and value >= SNR_THRES_0:
+        SNR_Histogram_Attr[SNR_3_0] += 1
+    elif value < SNR_THRES_0 and value >= SNR_THRES_n3:
+        SNR_Histogram_Attr[SNR_0_n3] += 1
+    elif value < SNR_THRES_n3 and value >= SNR_THRES_n6:
+        SNR_Histogram_Attr[SNR_n3_n6] += 1
+    elif value < SNR_THRES_n6:
+        SNR_Histogram_Attr[SNR_n6] += 1
         
 for value in Plot_Attr_TD[Y_RX2_SNR]:
-    if value >= SNR_THRES_20:
-        SNR_Histogram_Attr[SNR_20] += 1
-    elif value < SNR_THRES_20 and value >= SNR_THRES_15:
-        SNR_Histogram_Attr[SNR_15_20] += 1
-    elif value < SNR_THRES_15 and value >= SNR_THRES_10:
-        SNR_Histogram_Attr[SNR_10_15] += 1
-    elif value < SNR_THRES_10 and value >= SNR_THRES_5:
-        SNR_Histogram_Attr[SNR_5_10] += 1
-    elif value < SNR_THRES_5 and value >= SNR_THRES_0:
-        SNR_Histogram_Attr[SNR_0_5] += 1
-    elif value < SNR_THRES_0:
-        SNR_Histogram_Attr[SNR_0] += 1
+    if value >= SNR_THRES_30:
+        SNR_Histogram_Attr[SNR_30] += 1
+    elif value < SNR_THRES_30 and value >= SNR_THRES_27:
+        SNR_Histogram_Attr[SNR_30_27] += 1
+    elif value < SNR_THRES_27 and value >= SNR_THRES_24:
+        SNR_Histogram_Attr[SNR_27_24] += 1
+    elif value < SNR_THRES_24 and value >= SNR_THRES_21:
+        SNR_Histogram_Attr[SNR_24_21] += 1
+    elif value < SNR_THRES_21 and value >= SNR_THRES_18:
+        SNR_Histogram_Attr[SNR_21_18] += 1
+    elif value < SNR_THRES_18 and value >= SNR_THRES_15:
+        SNR_Histogram_Attr[SNR_18_15] += 1
+    elif value < SNR_THRES_15 and value >= SNR_THRES_12:
+        SNR_Histogram_Attr[SNR_15_12] += 1
+    elif value < SNR_THRES_12 and value >= SNR_THRES_9:
+        SNR_Histogram_Attr[SNR_12_9] += 1
+    elif value < SNR_THRES_9 and value >= SNR_THRES_6:
+        SNR_Histogram_Attr[SNR_9_6] += 1
+    elif value < SNR_THRES_6 and value >= SNR_THRES_3:
+        SNR_Histogram_Attr[SNR_6_3] += 1
+    elif value < SNR_THRES_3 and value >= SNR_THRES_0:
+        SNR_Histogram_Attr[SNR_3_0] += 1
+    elif value < SNR_THRES_0 and value >= SNR_THRES_n3:
+        SNR_Histogram_Attr[SNR_0_n3] += 1
+    elif value < SNR_THRES_n3 and value >= SNR_THRES_n6:
+        SNR_Histogram_Attr[SNR_n3_n6] += 1
+    elif value < SNR_THRES_n6:
+        SNR_Histogram_Attr[SNR_n6] += 1
         
 for value in Plot_Attr_TD[Y_RX3_SNR]:
-    if value >= SNR_THRES_20:
-        SNR_Histogram_Attr[SNR_20] += 1
-    elif value < SNR_THRES_20 and value >= SNR_THRES_15:
-        SNR_Histogram_Attr[SNR_15_20] += 1
-    elif value < SNR_THRES_15 and value >= SNR_THRES_10:
-        SNR_Histogram_Attr[SNR_10_15] += 1
-    elif value < SNR_THRES_10 and value >= SNR_THRES_5:
-        SNR_Histogram_Attr[SNR_5_10] += 1
-    elif value < SNR_THRES_5 and value >= SNR_THRES_0:
-        SNR_Histogram_Attr[SNR_0_5] += 1
-    elif value < SNR_THRES_0:
-        SNR_Histogram_Attr[SNR_0] += 1
+    if value >= SNR_THRES_30:
+        SNR_Histogram_Attr[SNR_30] += 1
+    elif value < SNR_THRES_30 and value >= SNR_THRES_27:
+        SNR_Histogram_Attr[SNR_30_27] += 1
+    elif value < SNR_THRES_27 and value >= SNR_THRES_24:
+        SNR_Histogram_Attr[SNR_27_24] += 1
+    elif value < SNR_THRES_24 and value >= SNR_THRES_21:
+        SNR_Histogram_Attr[SNR_24_21] += 1
+    elif value < SNR_THRES_21 and value >= SNR_THRES_18:
+        SNR_Histogram_Attr[SNR_21_18] += 1
+    elif value < SNR_THRES_18 and value >= SNR_THRES_15:
+        SNR_Histogram_Attr[SNR_18_15] += 1
+    elif value < SNR_THRES_15 and value >= SNR_THRES_12:
+        SNR_Histogram_Attr[SNR_15_12] += 1
+    elif value < SNR_THRES_12 and value >= SNR_THRES_9:
+        SNR_Histogram_Attr[SNR_12_9] += 1
+    elif value < SNR_THRES_9 and value >= SNR_THRES_6:
+        SNR_Histogram_Attr[SNR_9_6] += 1
+    elif value < SNR_THRES_6 and value >= SNR_THRES_3:
+        SNR_Histogram_Attr[SNR_6_3] += 1
+    elif value < SNR_THRES_3 and value >= SNR_THRES_0:
+        SNR_Histogram_Attr[SNR_3_0] += 1
+    elif value < SNR_THRES_0 and value >= SNR_THRES_n3:
+        SNR_Histogram_Attr[SNR_0_n3] += 1
+    elif value < SNR_THRES_n3 and value >= SNR_THRES_n6:
+        SNR_Histogram_Attr[SNR_n3_n6] += 1
+    elif value < SNR_THRES_n6:
+        SNR_Histogram_Attr[SNR_n6] += 1
 
-numRSRP = float(RSRP_Histogram_Attr[RSRP_70] + RSRP_Histogram_Attr[RSRP_70_85] + RSRP_Histogram_Attr[RSRP_85_95] + RSRP_Histogram_Attr[RSRP_95_105] + RSRP_Histogram_Attr[RSRP_105_120] + RSRP_Histogram_Attr[RSRP_120])
-numSNR =  float(SNR_Histogram_Attr[SNR_20] + SNR_Histogram_Attr[SNR_15_20] + SNR_Histogram_Attr[SNR_10_15] + SNR_Histogram_Attr[SNR_5_10] + SNR_Histogram_Attr[SNR_0_5] + SNR_Histogram_Attr[SNR_0])
+numRSRP = float(RSRP_Histogram_Attr[RSRP_60] + RSRP_Histogram_Attr[RSRP_60_65] + RSRP_Histogram_Attr[RSRP_65_70] + RSRP_Histogram_Attr[RSRP_70_75]
+                + RSRP_Histogram_Attr[RSRP_75_80] + RSRP_Histogram_Attr[RSRP_80_85] + RSRP_Histogram_Attr[RSRP_85_90] + RSRP_Histogram_Attr[RSRP_90_95]
+                + RSRP_Histogram_Attr[RSRP_95_100] + RSRP_Histogram_Attr[RSRP_100_105] + RSRP_Histogram_Attr[RSRP_105_110] + RSRP_Histogram_Attr[RSRP_110_115]
+                + RSRP_Histogram_Attr[RSRP_115_120] + RSRP_Histogram_Attr[RSRP_120])
+numSNR = float(SNR_Histogram_Attr[SNR_30] + SNR_Histogram_Attr[SNR_30_27] + SNR_Histogram_Attr[SNR_27_24] + SNR_Histogram_Attr[SNR_24_21]
+                + SNR_Histogram_Attr[SNR_21_18] + SNR_Histogram_Attr[SNR_18_15] + SNR_Histogram_Attr[SNR_15_12] + SNR_Histogram_Attr[SNR_12_9]
+                + SNR_Histogram_Attr[SNR_9_6] + SNR_Histogram_Attr[SNR_6_3] + SNR_Histogram_Attr[SNR_3_0] + SNR_Histogram_Attr[SNR_0_n3]
+                + SNR_Histogram_Attr[SNR_n3_n6] + SNR_Histogram_Attr[SNR_n6])
 
 TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX0_RSRP]), Plot_Attr_TD[Y_RX0_RSRP], label = "Rx0_RSRP", color='red', marker='.')
 TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX1_RSRP]), Plot_Attr_TD[Y_RX1_RSRP], label = "Rx1_RSRP", color='green', marker='.')
@@ -258,41 +434,75 @@ TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_START]), Plot_Attr_TD[Y_HO_STAR
 TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_SUC]), Plot_Attr_TD[Y_HO_SUC], label = "HO Success", color='black', marker='s')
 
 TD_plot.legend(loc='upper right')
-TD_plot.set_title('RSRP/SNR in TD')
+TD_plot.set_title('RSRP/SNR in TD (Total ' + str(TotalNumHO) + ' handovers)')
 TD_plot.grid(True)
 
-b1 = Histogram_RSRP.bar(RSRP_70, RSRP_Histogram_Attr[RSRP_70], width=1, edgecolor="black", color='green')
-b2 = Histogram_RSRP.bar(RSRP_70_85, RSRP_Histogram_Attr[RSRP_70_85], width=1, edgecolor="black", color='limegreen')
-b3 = Histogram_RSRP.bar(RSRP_85_95, RSRP_Histogram_Attr[RSRP_85_95], width=1, edgecolor="black", color='yellowgreen')
-b4 = Histogram_RSRP.bar(RSRP_95_105, RSRP_Histogram_Attr[RSRP_95_105], width=1, edgecolor="black", color='gold')
-b5 = Histogram_RSRP.bar(RSRP_105_120, RSRP_Histogram_Attr[RSRP_105_120], width=1, edgecolor="black", color='orange')
-b6 = Histogram_RSRP.bar(RSRP_120, RSRP_Histogram_Attr[RSRP_120], width=1, edgecolor="black", color='orangered')
+b1 = Histogram_RSRP.bar(RSRP_60, RSRP_Histogram_Attr[RSRP_60], width=1, edgecolor="black", color='cornflowerblue')
+b2 = Histogram_RSRP.bar(RSRP_60_65, RSRP_Histogram_Attr[RSRP_60_65], width=1, edgecolor="black", color='cornflowerblue')
+b3 = Histogram_RSRP.bar(RSRP_65_70, RSRP_Histogram_Attr[RSRP_65_70], width=1, edgecolor="black", color='cornflowerblue')
+b4 = Histogram_RSRP.bar(RSRP_70_75, RSRP_Histogram_Attr[RSRP_70_75], width=1, edgecolor="black", color='cornflowerblue')
+b5 = Histogram_RSRP.bar(RSRP_75_80, RSRP_Histogram_Attr[RSRP_75_80], width=1, edgecolor="black", color='cornflowerblue')
+b6 = Histogram_RSRP.bar(RSRP_80_85, RSRP_Histogram_Attr[RSRP_80_85], width=1, edgecolor="black", color='cornflowerblue')
+b7 = Histogram_RSRP.bar(RSRP_85_90, RSRP_Histogram_Attr[RSRP_85_90], width=1, edgecolor="black", color='cornflowerblue')
+b8 = Histogram_RSRP.bar(RSRP_90_95, RSRP_Histogram_Attr[RSRP_90_95], width=1, edgecolor="black", color='cornflowerblue')
+b9 = Histogram_RSRP.bar(RSRP_95_100, RSRP_Histogram_Attr[RSRP_95_100], width=1, edgecolor="black", color='cornflowerblue')
+b10 = Histogram_RSRP.bar(RSRP_100_105, RSRP_Histogram_Attr[RSRP_100_105], width=1, edgecolor="black", color='cornflowerblue')
+b11 = Histogram_RSRP.bar(RSRP_105_110, RSRP_Histogram_Attr[RSRP_105_110], width=1, edgecolor="black", color='cornflowerblue')
+b12 = Histogram_RSRP.bar(RSRP_110_115, RSRP_Histogram_Attr[RSRP_110_115], width=1, edgecolor="black", color='cornflowerblue')
+b13 = Histogram_RSRP.bar(RSRP_115_120, RSRP_Histogram_Attr[RSRP_115_120], width=1, edgecolor="black", color='cornflowerblue')
+b14 = Histogram_RSRP.bar(RSRP_120, RSRP_Histogram_Attr[RSRP_120], width=1, edgecolor="black", color='cornflowerblue')
 
 Histogram_RSRP.set_title('RSRP Histogram')
 Histogram_RSRP.grid(True)
+Histogram_RSRP.tick_params(axis='x', labelrotation=10)
 if numRSRP > 0:
-    Histogram_RSRP.bar_label(b1, labels=[format(RSRP_Histogram_Attr[RSRP_70]/numRSRP, '.1%')], label_type='center')
-    Histogram_RSRP.bar_label(b2, labels=[format(RSRP_Histogram_Attr[RSRP_70_85]/numRSRP, '.1%')], label_type='center')
-    Histogram_RSRP.bar_label(b3, labels=[format(RSRP_Histogram_Attr[RSRP_85_95]/numRSRP, '.1%')], label_type='center')
-    Histogram_RSRP.bar_label(b4, labels=[format(RSRP_Histogram_Attr[RSRP_95_105]/numRSRP, '.1%')], label_type='center')
-    Histogram_RSRP.bar_label(b5, labels=[format(RSRP_Histogram_Attr[RSRP_105_120]/numRSRP, '.1%')], label_type='center')
-    Histogram_RSRP.bar_label(b6, labels=[format(RSRP_Histogram_Attr[RSRP_120]/numRSRP, '.1%')], label_type='center')
+    Histogram_RSRP.bar_label(b1, labels=[format(RSRP_Histogram_Attr[RSRP_60]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b2, labels=[format(RSRP_Histogram_Attr[RSRP_60_65]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b3, labels=[format(RSRP_Histogram_Attr[RSRP_65_70]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b4, labels=[format(RSRP_Histogram_Attr[RSRP_70_75]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b5, labels=[format(RSRP_Histogram_Attr[RSRP_75_80]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b6, labels=[format(RSRP_Histogram_Attr[RSRP_80_85]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b7, labels=[format(RSRP_Histogram_Attr[RSRP_85_90]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b8, labels=[format(RSRP_Histogram_Attr[RSRP_90_95]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b9, labels=[format(RSRP_Histogram_Attr[RSRP_95_100]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b10, labels=[format(RSRP_Histogram_Attr[RSRP_100_105]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b11, labels=[format(RSRP_Histogram_Attr[RSRP_105_110]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b12, labels=[format(RSRP_Histogram_Attr[RSRP_110_115]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b13, labels=[format(RSRP_Histogram_Attr[RSRP_115_120]/numRSRP, '.1%')], label_type='edge')
+    Histogram_RSRP.bar_label(b14, labels=[format(RSRP_Histogram_Attr[RSRP_120]/numRSRP, '.1%')], label_type='edge')
 
-b7 = Histogram_SNR.bar(SNR_20, SNR_Histogram_Attr[SNR_20], width=1, edgecolor="black", color='green')
-b8 = Histogram_SNR.bar(SNR_15_20, SNR_Histogram_Attr[SNR_15_20], width=1, edgecolor="black", color='limegreen')
-b9 = Histogram_SNR.bar(SNR_10_15, SNR_Histogram_Attr[SNR_10_15], width=1, edgecolor="black", color='yellowgreen')
-b10 = Histogram_SNR.bar(SNR_5_10, SNR_Histogram_Attr[SNR_5_10], width=1, edgecolor="black", color='gold')
-b11 = Histogram_SNR.bar(SNR_0_5, SNR_Histogram_Attr[SNR_0_5], width=1, edgecolor="black", color='orange')
-b12 = Histogram_SNR.bar(SNR_0, SNR_Histogram_Attr[SNR_0], width=1, edgecolor="black", color='orangered')
+b15 = Histogram_SNR.bar(SNR_30, SNR_Histogram_Attr[SNR_30], width=1, edgecolor="black", color='cornflowerblue')
+b16 = Histogram_SNR.bar(SNR_30_27, SNR_Histogram_Attr[SNR_30_27], width=1, edgecolor="black", color='cornflowerblue')
+b17 = Histogram_SNR.bar(SNR_27_24, SNR_Histogram_Attr[SNR_27_24], width=1, edgecolor="black", color='cornflowerblue')
+b18 = Histogram_SNR.bar(SNR_24_21, SNR_Histogram_Attr[SNR_24_21], width=1, edgecolor="black", color='cornflowerblue')
+b19 = Histogram_SNR.bar(SNR_21_18, SNR_Histogram_Attr[SNR_21_18], width=1, edgecolor="black", color='cornflowerblue')
+b20 = Histogram_SNR.bar(SNR_18_15, SNR_Histogram_Attr[SNR_18_15], width=1, edgecolor="black", color='cornflowerblue')
+b21 = Histogram_SNR.bar(SNR_15_12, SNR_Histogram_Attr[SNR_15_12], width=1, edgecolor="black", color='cornflowerblue')
+b22 = Histogram_SNR.bar(SNR_12_9, SNR_Histogram_Attr[SNR_12_9], width=1, edgecolor="black", color='cornflowerblue')
+b23 = Histogram_SNR.bar(SNR_9_6, SNR_Histogram_Attr[SNR_9_6], width=1, edgecolor="black", color='cornflowerblue')
+b24 = Histogram_SNR.bar(SNR_6_3, SNR_Histogram_Attr[SNR_6_3], width=1, edgecolor="black", color='cornflowerblue')
+b25 = Histogram_SNR.bar(SNR_3_0, SNR_Histogram_Attr[SNR_3_0], width=1, edgecolor="black", color='cornflowerblue')
+b26 = Histogram_SNR.bar(SNR_0_n3, SNR_Histogram_Attr[SNR_0_n3], width=1, edgecolor="black", color='cornflowerblue')
+b27 = Histogram_SNR.bar(SNR_n3_n6, SNR_Histogram_Attr[SNR_n3_n6], width=1, edgecolor="black", color='cornflowerblue')
+b28 = Histogram_SNR.bar(SNR_n6, SNR_Histogram_Attr[SNR_n6], width=1, edgecolor="black", color='cornflowerblue')
 
 Histogram_SNR.set_title('SNR Histogram')
 Histogram_SNR.grid(True)
+Histogram_SNR.tick_params(axis='x', labelrotation=10)
 if numSNR > 0:
-    Histogram_SNR.bar_label(b7, labels=[format(SNR_Histogram_Attr[SNR_20]/numSNR, '.1%')], label_type='center')
-    Histogram_SNR.bar_label(b8, labels=[format(SNR_Histogram_Attr[SNR_15_20]/numSNR, '.1%')], label_type='center')
-    Histogram_SNR.bar_label(b9, labels=[format(SNR_Histogram_Attr[SNR_10_15]/numSNR, '.1%')], label_type='center')
-    Histogram_SNR.bar_label(b10, labels=[format(SNR_Histogram_Attr[SNR_5_10]/numSNR, '.1%')], label_type='center')
-    Histogram_SNR.bar_label(b11, labels=[format(SNR_Histogram_Attr[SNR_0_5]/numSNR, '.1%')], label_type='center')
-    Histogram_SNR.bar_label(b12, labels=[format(SNR_Histogram_Attr[SNR_0]/numSNR, '.1%')], label_type='center')
+    Histogram_SNR.bar_label(b15, labels=[format(SNR_Histogram_Attr[SNR_30]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b16, labels=[format(SNR_Histogram_Attr[SNR_30_27]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b17, labels=[format(SNR_Histogram_Attr[SNR_27_24]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b18, labels=[format(SNR_Histogram_Attr[SNR_24_21]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b19, labels=[format(SNR_Histogram_Attr[SNR_21_18]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b20, labels=[format(SNR_Histogram_Attr[SNR_18_15]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b21, labels=[format(SNR_Histogram_Attr[SNR_15_12]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b22, labels=[format(SNR_Histogram_Attr[SNR_12_9]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b23, labels=[format(SNR_Histogram_Attr[SNR_9_6]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b24, labels=[format(SNR_Histogram_Attr[SNR_6_3]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b25, labels=[format(SNR_Histogram_Attr[SNR_3_0]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b26, labels=[format(SNR_Histogram_Attr[SNR_0_n3]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b27, labels=[format(SNR_Histogram_Attr[SNR_n3_n6]/numSNR, '.1%')], label_type='edge')
+    Histogram_SNR.bar_label(b28, labels=[format(SNR_Histogram_Attr[SNR_n6]/numSNR, '.1%')], label_type='edge')
 
 plt.show()
