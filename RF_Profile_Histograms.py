@@ -420,15 +420,15 @@ numSNR = float(SNR_Histogram_Attr[SNR_30] + SNR_Histogram_Attr[SNR_30_27] + SNR_
                 + SNR_Histogram_Attr[SNR_9_6] + SNR_Histogram_Attr[SNR_6_3] + SNR_Histogram_Attr[SNR_3_0] + SNR_Histogram_Attr[SNR_0_n3]
                 + SNR_Histogram_Attr[SNR_n3_n6] + SNR_Histogram_Attr[SNR_n6])
 
-TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX0_RSRP]), Plot_Attr_TD[Y_RX0_RSRP], label = "Rx0_RSRP", color='red', marker='.')
-TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX1_RSRP]), Plot_Attr_TD[Y_RX1_RSRP], label = "Rx1_RSRP", color='green', marker='.')
-TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX2_RSRP]), Plot_Attr_TD[Y_RX2_RSRP], label = "Rx2_RSRP", color='orange', marker='.')
-TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX3_RSRP]), Plot_Attr_TD[Y_RX3_RSRP], label = "Rx3_RSRP", color='blue', marker='.')
+TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX3_RSRP]), Plot_Attr_TD[Y_RX3_RSRP], label = "Rx3_RSRP", color='red', marker='.')
+TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX2_RSRP]), Plot_Attr_TD[Y_RX2_RSRP], label = "Rx2_RSRP", color='orange', marker='.')
+TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX1_RSRP]), Plot_Attr_TD[Y_RX1_RSRP], label = "Rx1_RSRP", color='green', marker='.')
+TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX0_RSRP]), Plot_Attr_TD[Y_RX0_RSRP], label = "Rx0_RSRP", color='blue', marker='.')
 
-TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX0_SNR]), Plot_Attr_TD[Y_RX0_SNR], label = "Rx0_SNR", color='orangered', marker='.')
-TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX1_SNR]), Plot_Attr_TD[Y_RX1_SNR], label = "Rx1_SNR", color='greenyellow', marker='.')
-TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX2_SNR]), Plot_Attr_TD[Y_RX2_SNR], label = "Rx2_SNR", color='gold', marker='.')
-TD_plot.plot(pd.to_datetime(Plot_Attr_TD[X_RX3_SNR]), Plot_Attr_TD[Y_RX3_SNR], label = "Rx3_SNR", color='cyan', marker='.')
+TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX3_SNR]), Plot_Attr_TD[Y_RX3_SNR], label = "Rx3_SNR", color='orangered', marker=',')
+TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX2_SNR]), Plot_Attr_TD[Y_RX2_SNR], label = "Rx2_SNR", color='gold', marker=',')
+TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX1_SNR]), Plot_Attr_TD[Y_RX1_SNR], label = "Rx1_SNR", color='greenyellow', marker=',')
+TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX0_SNR]), Plot_Attr_TD[Y_RX0_SNR], label = "Rx0_SNR", color='cyan', marker=',')
             
 TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_START]), Plot_Attr_TD[Y_HO_START], label = "HO Start", color='black', marker='>')
 TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_SUC]), Plot_Attr_TD[Y_HO_SUC], label = "HO Success", color='black', marker='s')
