@@ -435,7 +435,7 @@ TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_SUC]), Plot_Attr_TD[Y_HO_SUC], 
 
 TD_plot.legend(loc='upper right')
 TD_plot.set_title('RSRP/SNR in TD (Total ' + str(TotalNumHO) + ' handovers)')
-TD_plot.grid(True)
+TD_plot.grid(True, linestyle='dotted')
 TD_plot.set_axisbelow(True)
 
 b1 = Histogram_RSRP.bar(RSRP_60, RSRP_Histogram_Attr[RSRP_60], width=1, edgecolor="black", color='cornflowerblue')
@@ -454,7 +454,7 @@ b13 = Histogram_RSRP.bar(RSRP_115_120, RSRP_Histogram_Attr[RSRP_115_120], width=
 b14 = Histogram_RSRP.bar(RSRP_120, RSRP_Histogram_Attr[RSRP_120], width=1, edgecolor="black", color='cornflowerblue')
 
 Histogram_RSRP.set_title('RSRP Histogram')
-Histogram_RSRP.grid(True)
+Histogram_RSRP.grid(True, linestyle='dotted')
 Histogram_RSRP.set_axisbelow(True)
 Histogram_RSRP.tick_params(axis='x', labelrotation=10)
 if numRSRP > 0:
@@ -489,7 +489,7 @@ b27 = Histogram_SNR.bar(SNR_n3_n6, SNR_Histogram_Attr[SNR_n3_n6], width=1, edgec
 b28 = Histogram_SNR.bar(SNR_n6, SNR_Histogram_Attr[SNR_n6], width=1, edgecolor="black", color='cornflowerblue')
 
 Histogram_SNR.set_title('SNR Histogram')
-Histogram_SNR.grid(True)
+Histogram_SNR.grid(True, linestyle='dotted')
 Histogram_SNR.set_axisbelow(True)
 Histogram_SNR.tick_params(axis='x', labelrotation=10)
 if numSNR > 0:
