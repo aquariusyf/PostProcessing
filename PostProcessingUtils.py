@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 # Class PostProcessingUtils Functions
-#  * getArgv ----- Get inputs from command line (ARGV[1] = log path, ARGV[1 + n] = log packet code or qtrace indicator or sub ID)
+#  * getArgv ----- Get inputs from command line (ARGV[1] = log path, ARGV[1 + n] = log packet code or qtrace indicator or sub ID or skip filter flag)
 #  * scanWorkingDir ----- Scan the path for files (or given type, .hdf by default) and dirs
 #  * getFilesPath ----- Getter of files path in the working directory with given extension
 #  * skipFitlerLogs ----- Get skip filter flag, will skip filtering logs if True
@@ -61,28 +61,28 @@ class PostProcessingUtils(object):
     
     ### Constructor ###
     def __init__(self, filterMask = filter_mask):
-        self.skipFilterLog = False
-        self.files = []
-        self.fileExt = '.hdf' # default = .hdf
-        self.dirs = []
-        self.workingDir = ''
-        self.sid = '0'
-        self.pktFilter = []
-        self.pktCodeFormat = re.compile(r'[0][x][\dA-F]{4}$')
-        self.defaultPacketFilter = filterMask[LOG_FILTER]
-        self.eventFilter = []
-        self.eventCodeFormat = re.compile(r'^[\d]{3,4}$')
-        self.defaultEventFilter = filterMask[EVENT_FILTER]
-        self.keywords = filterMask[KEYWORDS_FILTER]
-        self.isQtrace = False
-        self.qtraceFilterStringList = {} 
-        self.qtraceFilterStringListNonRegex = filterMask[QTRACE_NON_REGEX]
-        self.qtraceFilterStringListRegex = filterMask[QTRACE_REGEX]
-        self.analyzerGrid = []
-        self.defaultAnalyzerList = filterMask[ANALYZER_FILTER]
-        self.logPackets = {}
+        self.skipFilterLog = False # Indicator of skip filtering logs (HDF to Text) from ARGV
+        self.files = [] # All files of given type in current working dir
+        self.fileExt = '.hdf' # File extension, default = .hdf
+        self.dirs = [] # All sub dirs in current working dir
+        self.workingDir = '' # Current working dir from ARGV
+        self.sid = '0' # Sub ID indicator from ARGV
+        self.pktFilter = [] # Log packet filter from ARGV
+        self.pktCodeFormat = re.compile(r'[0][x][\dA-F]{4}$') # Packet code RE format
+        self.defaultPacketFilter = filterMask[LOG_FILTER] # Default packet filter
+        self.eventFilter = [] # Event filter from ARGV
+        self.eventCodeFormat = re.compile(r'^[\d]{3,4}$') # Event code RE format
+        self.defaultEventFilter = filterMask[EVENT_FILTER] # Default event filter
+        self.keywords = filterMask[KEYWORDS_FILTER] # Keyword filter
+        self.isQtrace = False # Qtrace indicator from ARGV (To enable Qtrace filter)
+        self.qtraceFilterStringList = {} # Qtrace filter strings
+        self.qtraceFilterStringListNonRegex = filterMask[QTRACE_NON_REGEX] # Non regex Qtrace strings
+        self.qtraceFilterStringListRegex = filterMask[QTRACE_REGEX] # Regex Qtrace strings
+        self.analyzerGrid = [] # Grid to be extracted from working dir
+        self.defaultAnalyzerList = filterMask[ANALYZER_FILTER] # Default analyzers to be extracted
+        self.logPackets = {} # Log packets from logs in working dir
         self.logPacketFormat = {'headlineFormat':re.compile(r'^[\d]{4}[\s]{1}[A-Za-z]{3}[\s]{1,2}[\d]{1,2}[\s]{2}([\d]{2}:[\d]{2}:[\d]{2}\.[\d]{3}).*([0][x][\dA-F]{4})(.*)$'), 
-                                'subIdFormat': re.compile(r'^Subscription ID =.*([\d]{1})')}
+                                'subIdFormat': re.compile(r'^Subscription ID =.*([\d]{1})')} # Log packet headline and sub id RE format
 
 
     ### Interpret command line, get working directory, initialize log filter ###
@@ -204,7 +204,7 @@ class PostProcessingUtils(object):
             fileLines = []
             openedFile = open(file, 'r') 
             fileLines = openedFile.readlines()
-            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/initLogPacketList) ' + 'FILE = ' + file)
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/initLogPacketList) ' + 'File opened: ' + file)
             openedFile.close()
 
             for index, line in enumerate(fileLines): # Check each line in current text file, init logPacket with log info
@@ -819,7 +819,7 @@ class LogPacket(object):
         if len(self.headline) > 0:
             return self.headline
         else:
-            print(datetime.now().strftime("%H:%M:%S"), '(LogPacket/Getters) ' + 'No headline found!')
+            # print(datetime.now().strftime("%H:%M:%S"), '(LogPacket/Getters) ' + 'No headline found!')
             return ''
 
     def getContent(self):
