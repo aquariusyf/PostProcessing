@@ -1,4 +1,4 @@
-from PostProcessingUtils import PostProcessingUtils, LogPacket_RSRP_SNR
+from PostProcessingUtils import PostProcessingUtils, LogPacket_RSRP_SNR, LogPacket_HO
 from FilterMask import *
 import sys
 import matplotlib.pyplot as plt
@@ -18,6 +18,8 @@ LogPkt_All = RF_Profile.getLogPacketList()
 
 HO_START = -30
 HO_SUC = -40
+ARFCN = 'arfcn'
+PCI = 'pci'
 RX0 = 'Rx0'
 RX1 = 'Rx1'
 RX2 = 'Rx2'
@@ -121,6 +123,7 @@ SNR_Histogram_Attr = {SNR_30: 0, SNR_30_27: 0, SNR_27_24: 0, SNR_24_21: 0,
                       SNR_n3_n6: 0, SNR_n6: 0}
 
 TotalNumHO = 0
+PCI_All = []
 
 figure, axis = plt.subplots(3, 1)
 TD_plot = axis[0]
@@ -136,6 +139,8 @@ for key in LogPkt_All.keys():
         if pkt.getTitle() == 'Event  --  EVENT_NR5G_RRC_HO_STARTED_V2':
             Plot_Attr_TD[Y_HO_START].append(HO_START)
             Plot_Attr_TD[X_HO_START].append(pkt.getTimestamp())
+            HOpkt = LogPacket_HO(pkt)
+            PCI_All.append(HOpkt.getTargetCellInfo()[PCI])
         elif pkt.getTitle() == 'Event  --  EVENT_NR5G_RRC_HO_SUCCESS':
             Plot_Attr_TD[Y_HO_SUC].append(HO_SUC)
             Plot_Attr_TD[X_HO_SUC].append(pkt.getTimestamp())
@@ -434,7 +439,7 @@ TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_START]), Plot_Attr_TD[Y_HO_STAR
 TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_SUC]), Plot_Attr_TD[Y_HO_SUC], label = "HO Success", color='black', marker='s')
 
 TD_plot.legend(loc='upper right')
-TD_plot.set_title('RSRP/SNR in TD (Total ' + str(TotalNumHO) + ' handovers)')
+TD_plot.set_title('RSRP/SNR in TD (Total ' + str(TotalNumHO) + ' handovers with ' + str(len(list(set(PCI_All)))) +' unique PCIs)')
 TD_plot.grid(True, linestyle='dotted')
 TD_plot.set_axisbelow(True)
 

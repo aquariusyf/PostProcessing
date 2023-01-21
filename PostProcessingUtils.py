@@ -40,6 +40,10 @@
 #  * getRSRP ----- Get RSRP dict (Rx: [rsrp])
 #  * getRSRP ----- Get SNR dict (Rx: [snr])
 #---------------------------------------------------------------------------------------------------------------------------------------------------
+# class LogPacket_HO Functions (Inheritance of LogPacket, get serving and target cell info from HO event)
+#  * getSourceCellInfo ----- Get source cell arfcn and pci
+#  * getTargetCellInfo ----- Get target cell arfcn and pci
+#---------------------------------------------------------------------------------------------------------------------------------------------------
 
 import os
 import sys
@@ -1422,8 +1426,8 @@ class LogPacket_RSRP_SNR(LogPacket):
             for i, j in self.SNR.items():
                 print('SNR ' + i, j)
             for i, j in self.RSRP.items():
-                print('RSRP ' + i, j)'''
-    
+                print('RSRP ' + i, j)'''     
+
     ### Getters ###
     def getRSTYPE(self):
         return self.RS_TYPE
@@ -1440,6 +1444,54 @@ class LogPacket_RSRP_SNR(LogPacket):
         self.RS_TYPE = ''
         self.RSRP = {}
         self.SNR = {}
+
+##### Inheritance of LogPacket, get serving and target cell info from HO event #####
+class LogPacket_HO(LogPacket):
+    
+    ### Constructor ###
+    def __init__(self, logPacket):
+        ARFCN = 'arfcn'
+        PCI = 'pci'
+        self.SourceCellInfo = {ARFCN: -1, PCI: -1}
+        self.TargetCellInfo = {ARFCN: -1, PCI: -1}
+        re_HOCellInfo = re.compile(r'^.*Source Phy Cell Id = ([\d]*),.*Source ARFCN = ([\d]*),.*Target Phy Cell Id = ([\d]*),.*Target ARFCN = ([\d]*).*$')
+
+        # Payload String = Source Phy Cell Id = 9, Source ARFCN = 627264, Target Phy Cell Id = 10, Target ARFCN = 627264
+
+        if len(logPacket.getHeadline()) == 0:
+            sys.exit('(LogPacket_HO/__init__) ' + 'No log packets found!!!')
+        else:
+            self.packetCode = logPacket.getPacketCode()
+            self.subID = logPacket.getSubID()
+            self.timestamp = logPacket.getTimestamp()
+            self.title = logPacket.getTitle()
+            self.headline = logPacket.getHeadline()
+            self.content = logPacket.getContent()
+            self.absTime = logPacket.getAbsTime()
+            if logPacket.getTitle() == 'Event  --  EVENT_NR5G_RRC_HO_STARTED_V2':
+                for line in logPacket.getContent():
+                    if re_HOCellInfo.match(line):
+                        self.SourceCellInfo[PCI] = int(re_HOCellInfo.match(line).groups()[0])
+                        # print('Source PCI: ', self.SourceCellInfo[PCI])
+                        self.SourceCellInfo[ARFCN] = int(re_HOCellInfo.match(line).groups()[1])
+                        # print('Source ARFCN: ', self.SourceCellInfo[ARFCN])
+                        self.TargetCellInfo[PCI] = int(re_HOCellInfo.match(line).groups()[2])
+                        # print('Target PCI: ', self.TargetCellInfo[PCI])
+                        self.TargetCellInfo[ARFCN] = int(re_HOCellInfo.match(line).groups()[3])
+                        # print('Target ARFCN: ', self.TargetCellInfo[ARFCN])      
+
+    ### Getters ###
+    def getSourceCellInfo(self):
+        return self.SourceCellInfo
+    
+    def getTargetCellInfo(self):
+        return self.TargetCellInfo
+    
+    ### Destructor ###
+    def __del__(self):
+        LogPacket.__del__(self)
+        self.SourceCellInfo = {}
+        self.TargetCellInfo = {}
 
 if __name__=='__main__': 
     # PostProcessingUtils test
