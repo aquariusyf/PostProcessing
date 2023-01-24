@@ -306,7 +306,6 @@ class PostProcessingUtils(object):
             noEventFitler = True
         if self.isQtrace:
             self.qtraceFilterStringList = {0: self.qtraceFilterStringListNonRegex, 1: self.qtraceFilterStringListRegex}
-
         # Open APEX and set log filter
         try:
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Setup APEX automation client ...\n') 
@@ -378,10 +377,10 @@ class PostProcessingUtils(object):
                     if self.isQtrace:
                         if firstTimeRun:
                             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply Qtrace filter!')
-                        apex.Set('PacketFilter', 0x1FE7, 1) # Qtrace and F3 pkt 0x1FE7, 0x1FE8, 0x1FEB have to be enabled explicitly
+                        '''apex.Set('PacketFilter', 0x1FE7, 1) # Qtrace and F3 pkt 0x1FE7, 0x1FE8, 0x1FEB have to be enabled explicitly
                         apex.Set('PacketFilter', 0x1FE8, 1)
                         apex.Set('PacketFilter', 0x1FEB, 1)
-                        apex.Commit('PacketFilter')
+                        apex.Commit('PacketFilter')'''
                         apex.SetQtraceFilterString(self.qtraceFilterStringList)
                         apex.SortByTime()
                     
