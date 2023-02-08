@@ -19,6 +19,7 @@
 #  * absTimeToTimestamp ----- Convert abs time to timestamp str ###
 #  * getDelayBySlot ----- Caculate delay by SFN and slot (A - B) ###
 #  * getDelay ----- Calculate the delay between two log packets
+#  * containsIE ----- Check if log pkt contains given IE
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 # Class LogPacket_Talkspurt Functions (Inheritance of LogPacket)
 #  * isInTalkspurt ----- Return true if pkt is within talk spurt
@@ -939,6 +940,17 @@ class LogPacket(object):
                 return -1
         else:
             return -1
+
+    ### Check if log pkt contains given IE ###
+    def containsIE(self, itemToCheck = ''):
+        if itemToCheck == '':
+            print(datetime.now().strftime("%H:%M:%S"), '(LogPacket/containsIE) ' + 'INVALID IE!')
+            return False
+        else:
+            for line in self.getContent():
+                if itemToCheck in line:
+                    return True
+        return False         
 
     ### Destructor ###
     def __del__(self):

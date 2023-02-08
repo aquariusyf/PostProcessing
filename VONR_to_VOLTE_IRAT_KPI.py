@@ -9,7 +9,7 @@ from datetime import datetime
 import sys
 import os
 
-filter_mask[LOG_FILTER] = [0xB821, 0x1568, 0x1569, 0xB0C0, 0xB0ED]
+filter_mask[LOG_FILTER] = [0xB821, 0x1568, 0x1569, 0xB0C0, 0xB0EC, 0xB0ED]
 filter_mask[EVENT_FILTER] = [3270, 1994]
 
 # Convert log to text file with default filter
@@ -30,13 +30,12 @@ AvgControlDelay = ['VONR to VOLTE Control Plane Delay (ms)']
 AvgUserDelay = ['VONR to VOLTE User Plane Delay (ms)']
 IRATPktLoss = ['Total Num of RTP Loss during IRAT']
 
-############################ Signaling breakdowns to be implemented ############################
-'''MR_To_irat_Cmd = ['Measurement Report to NR irat Command (ms)']
-irat_Cmd_To_LRRC_Reconfig = ['NR irat Command to LRRC Reconfig (ms)']
+MR_To_irat_Cmd = ['Measurement Report to NR HO Command (ms)']
+irat_Cmd_To_LRRC_Reconfig = ['NR HO Command to LRRC Reconfig (ms)']
 LRRC_Reconfig_To_Config_Complete = ['LRRC Reconfig to LRRC Reconfig Complete (ms)']
 Config_Complete_To_TAU_Req = ['LRRC Reconfig Complete to TAU Request (ms)']
 TAU_Req_To_TAU_Accept = ['TAU Request to TAU Accept (ms)']
-TAU_Accept_To_TAU_Complete = ['TAU Accept to TAU Complete (ms)']'''
+TAU_Accept_To_TAU_Complete = ['TAU Accept to TAU Complete (ms)']
 
 # Initialize first row with log names
 print(datetime.now().strftime("%H:%M:%S"), '(VONR_to_VOLTE_IRAT_KPI) ' + 'Extracting KPI Summary...')
@@ -84,7 +83,7 @@ def getIRATKPI(pktList):
             while m >= 0: # Find last RTP before IRAT
                 if pktList[m].getPacketCode() == '0x1568':
                     RTP_pkt_before_IRAT = LogPacket_RTP(pktList[m]) # Convert to RTP sub-class to get direction and rat type
-                    if RTP_pkt_before_IRAT.getDirection() == 'NETWORK_TO_UE' and RTP_pkt_before_IRAT.getRatType() == 'NR5G':
+                    if RTP_pkt_before_IRAT.getDirection() == 'NETWORK_TO_UE' and RTP_pkt_before_IRAT.getRatType() == 'NR5G' and RTP_pkt_before_IRAT.getMediaType() == 'AUDIO':
                         RTP_Pair.append(pktList[m]) # Add RTP pkt before IRAT to RTP pair
                         break
                     else:
@@ -109,7 +108,7 @@ def getIRATKPI(pktList):
                     for j in range(IRAT_Suc_Index, len(pktList)):
                         if pktList[j].getPacketCode() == '0x1568': # Find the first DL RTP pkt after IRAT
                             RTP_pkt_after_IRAT = LogPacket_RTP(pktList[j]) # Convert to RTP sub-class to get direction and rat type
-                            if RTP_pkt_after_IRAT.getDirection() == 'NETWORK_TO_UE' and RTP_pkt_after_IRAT.getRatType() == 'LTE':
+                            if RTP_pkt_after_IRAT.getDirection() == 'NETWORK_TO_UE' and RTP_pkt_after_IRAT.getRatType() == 'LTE' and RTP_pkt_after_IRAT.getMediaType() == 'AUDIO':
                                 # print('IRAT start: ', RTP_Pair[0].getTimestamp())
                                 # print('IRAT suc: ', RTP_Pair[1].getTimestamp())
                                 RTP_Pair.append(pktList[j]) # Add RTP pkt after IRAT to RTP pair
@@ -155,6 +154,80 @@ def getIRATKPI(pktList):
     
     return [TotalIRAT, AvgCPDelay, AvgUPDelay, IRAT_RTP_Loss]
 
+# Get signaling breakdowns #
+def getSignalingBreakdown(pktList):
+    if len(pktList) == 0:
+        return ['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A']
+    
+    MR_To_HOCmd = 'N/A'
+    HOCmd_To_LRRCReconfig = 'N/A'
+    LRRCReconfig_To_LRRCReconfigComplete = 'N/A'
+    LRRCReconfigComplete_To_TAUReq = 'N/A'
+    TAUReq_To_TAUAccept = 'N/A'
+    TAUAccept_To_TAUComplete = 'N/A'
+    
+    MR = LogPacket()
+    HOCmd = LogPacket()
+    LRRCReconfig = LogPacket()
+    LRRCReconfigComplete = LogPacket()
+    TAUReq = LogPacket()
+    TAUAccept = LogPacket()
+    TAUComplete = LogPacket()
+    
+    for i in range(0, len(pktList)):
+        if pktList[i].getTitle() == 'NR5G RRC OTA Packet  --  DL_DCCH / mobilityFromNRCommand' and pktList[i].containsIE('targetRAT-Type eutra'): # Find NR HO command
+            j = i
+            j -= 1
+            HOCmd = pktList[i]
+            while j >= 0:
+                if pktList[j].getTitle() == 'NR5G RRC OTA Packet  --  UL_DCCH / MeasurementReport' and pktList[j].containsIE('eutra-PhysCellId'): # Find MR
+                    MR = pktList[j]
+                    break
+                else:
+                    j -= 1
+            LRRCReconfig_Found = False
+            LRRCReconfigComplete_Found = False
+            TAUReq_Found = False
+            TAU_Accept_Found = False
+            for n in range(i, len(pktList)):
+                # print(pktList[n].getTitle())
+                if pktList[n].getTitle() == 'LTE NAS EMM Plain OTA Outgoing Message  --  Tracking area update complete Msg': # Find TAU Complete
+                    TAUComplete = pktList[n]
+                    # print('TAU_Complete_Found')
+                    break
+                elif pktList[n].getTitle() == 'LTE RRC OTA Packet  --  DL_DCCH / RRCConnectionReconfiguration' and pktList[n].containsIE('mobilityControlInfo') and not LRRCReconfig_Found: # Find LTE RRC Reconfig
+                    LRRCReconfig_Found = True
+                    LRRCReconfig = pktList[n]
+                    # print('LRRCReconfig_Found')
+                elif pktList[n].getTitle() == 'LTE RRC OTA Packet  --  UL_DCCH / RRCConnectionReconfigurationComplete' and not LRRCReconfigComplete_Found: # Find LTE RRC Reconfig Complete
+                    LRRCReconfigComplete_Found = True
+                    LRRCReconfigComplete = pktList[n]
+                    # print('LRRCReconfigComplete_Found')
+                elif pktList[n].getTitle() == 'LTE NAS EMM Plain OTA Outgoing Message  --  Tracking area update request Msg' and not TAUReq_Found: # Find TAU Request
+                    TAUReq_Found = True
+                    TAUReq = pktList[n]
+                    # print('TAUReq_Found')
+                elif pktList[n].getTitle() == 'LTE NAS EMM Plain OTA Incoming Message  --  Tracking area update accept Msg' and not TAU_Accept_Found: # Find TAU Accept
+                    TAU_Accept_Found = True
+                    TAUAccept = pktList[n]
+                    # print('TAU_Accept_Found')
+    
+    # Calculate delays
+    if MR.getTitle() != '' and HOCmd.getTitle() != '':
+        MR_To_HOCmd = LogPacket.getDelay(HOCmd, MR)
+    if HOCmd.getTitle() != '' and LRRCReconfig.getTitle() != '':  
+        HOCmd_To_LRRCReconfig = LogPacket.getDelay(LRRCReconfig, HOCmd)
+    if LRRCReconfig.getTitle() != '' and LRRCReconfigComplete.getTitle() != '':  
+        LRRCReconfig_To_LRRCReconfigComplete = LogPacket.getDelay(LRRCReconfigComplete, LRRCReconfig)
+    if LRRCReconfigComplete.getTitle() != '' and TAUReq.getTitle() != '':  
+        LRRCReconfigComplete_To_TAUReq = LogPacket.getDelay(TAUReq, LRRCReconfigComplete)
+    if TAUReq.getTitle() != '' and TAUAccept.getTitle() != '':  
+        TAUReq_To_TAUAccept = LogPacket.getDelay(TAUAccept, TAUReq)
+    if TAUAccept.getTitle() != '' and TAUComplete.getTitle() != '':  
+        TAUAccept_To_TAUComplete = LogPacket.getDelay(TAUComplete, TAUAccept)
+
+    return [MR_To_HOCmd, HOCmd_To_LRRCReconfig, LRRCReconfig_To_LRRCReconfigComplete, LRRCReconfigComplete_To_TAUReq, TAUReq_To_TAUAccept, TAUAccept_To_TAUComplete]
+
 # Get related KPI and add to corresponding rows
 for log in logPktList_All_Logs.values():
     iratKPI = getIRATKPI(log) # Get irat KPI
@@ -162,6 +235,14 @@ for log in logPktList_All_Logs.values():
     AvgControlDelay.append(iratKPI[1])
     AvgUserDelay.append(iratKPI[2])
     IRATPktLoss.append(iratKPI[3])
+    
+    sigBreakdown = getSignalingBreakdown(log)
+    MR_To_irat_Cmd.append(sigBreakdown[0])
+    irat_Cmd_To_LRRC_Reconfig.append(sigBreakdown[1])
+    LRRC_Reconfig_To_Config_Complete.append(sigBreakdown[2])
+    Config_Complete_To_TAU_Req.append(sigBreakdown[3])
+    TAU_Req_To_TAU_Accept.append(sigBreakdown[4])
+    TAU_Accept_To_TAU_Complete.append(sigBreakdown[5])
 
 # Init work book and fill rows with data
 wb = Workbook()
@@ -172,6 +253,12 @@ ws.append(Total_IRAT)
 ws.append(AvgControlDelay)
 ws.append(AvgUserDelay)
 ws.append(IRATPktLoss)
+ws.append(MR_To_irat_Cmd)
+ws.append(irat_Cmd_To_LRRC_Reconfig)
+ws.append(LRRC_Reconfig_To_Config_Complete)
+ws.append(Config_Complete_To_TAU_Req)
+ws.append(TAU_Req_To_TAU_Accept)
+ws.append(TAU_Accept_To_TAU_Complete)
 
 # Save KPI table to excel
 dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
