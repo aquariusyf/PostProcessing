@@ -361,7 +361,7 @@ def getHandoverKPI(pktList):
             while m >= 0: # Find last RTP before HO
                 if pktList[m].getPacketCode() == '0x1568':
                     RTP_pkt_before_HO = LogPacket_RTP(pktList[m]) # Convert to RTP sub-class to get direction
-                    if RTP_pkt_before_HO.getDirection() == 'NETWORK_TO_UE':
+                    if RTP_pkt_before_HO.getDirection() == 'NETWORK_TO_UE' and RTP_pkt_before_HO.getMediaType() == 'AUDIO':
                         RTP_Pair.append(pktList[m]) # Add RTP pkt before HO to RTP pair
                         break
                     else:
@@ -389,7 +389,7 @@ def getHandoverKPI(pktList):
                     for j in range(HO_suc_Index, len(pktList)):
                         if pktList[j].getPacketCode() == '0x1568': # Find the first DL RTP pkt after HO
                             RTP_pkt_after_HO = LogPacket_RTP(pktList[j]) # Convert to RTP sub-class to get direction
-                            if RTP_pkt_after_HO.getDirection() == 'NETWORK_TO_UE':
+                            if RTP_pkt_after_HO.getDirection() == 'NETWORK_TO_UE' and RTP_pkt_after_HO.getMediaType() == 'AUDIO':
                                 # print('HO start: ', RTP_Pair[0].getTimestamp())
                                 # print('HO suc: ', RTP_Pair[1].getTimestamp())
                                 RTP_Pair.append(pktList[j]) # Add RTP pkt after HO to RTP pair
