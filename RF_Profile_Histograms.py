@@ -141,6 +141,7 @@ for key in LogPkt_All.keys():
             Plot_Attr_TD[X_HO_START].append(pkt.getTimestamp())
             HOpkt = LogPacket_HO(pkt)
             PCI_All.append(HOpkt.getTargetCellInfo()[PCI])
+            PCI_All.append(HOpkt.getSourceCellInfo()[PCI])
         elif pkt.getTitle() == 'Event  --  EVENT_NR5G_RRC_HO_SUCCESS':
             Plot_Attr_TD[Y_HO_SUC].append(HO_SUC)
             Plot_Attr_TD[X_HO_SUC].append(pkt.getTimestamp())
