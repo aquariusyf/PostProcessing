@@ -6,6 +6,7 @@
 #  * skipFitlerLogs ----- Get skip filter flag, will skip filtering logs if True
 #  * initLogPacketList ----- Initializing the packet list extracted from text files
 #  * getLogPacketList ----- Getter of log packet list
+#  * getLogPktCodeList ----- Getter of log packet code list
 #  * convertToText ----- Convert .hdf logs to text files with given log or qtrace filter
 #  * findKeywords ----- Find keywords from log text file (Keywords defined in FilterMask)
 #  * exportAnalyzer ----- Extract the given (or default) analyzer/grid from logs
@@ -289,7 +290,34 @@ class PostProcessingUtils(object):
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPacketList) ' + 'No log packets found!!!')
             return {}
 
-
+    ### Getter of log packet code list ###
+    def getLogPktCodeList(self):
+        if len(self.files) == 0:
+            sys.exit('(PostProcessingUtils/getLogPktCodeList) ' + 'No fitlered text file found, please check path or fileExt')
+        headLineFound = ''
+        for file in self.files: # Open filtered text files with log pkt info
+            openedFile = open(file, 'r')
+            line = openedFile.readline()
+            logPktCodeList = set()
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPktCodeList) ' + 'Fetching log packet code list from: ' + file)  
+            while line:
+                if self.logPacketFormat['headlineFormat'].match(line):
+                    headLineFound = self.logPacketFormat['headlineFormat'].match(line)
+                    logPktCodeList.add(headLineFound.groups()[1].strip())
+                    line = openedFile.readline()
+                else:
+                    line = openedFile.readline()
+            resultFile =file.replace('.txt', '_LogPktCodeList_Result.txt')
+            openedFile.close()
+            f = f = open(resultFile, 'w')
+            f.write('##### Total ' + str(len(logPktCodeList)) + ' log packet code found #####\n')
+            f.write('--------------------------------------------------------------------------------------------------------------------\n')
+            for logPktCode in logPktCodeList:
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPktCodeList) ' + 'Found log packet: ' + logPktCode)
+                f.write(logPktCode + '\n')
+            f.close()   
+        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getLogPktCodeList) ' + 'Fetching log packet code list completed!')
+                  
     ### Apply filters and convert QXDM logs to txt files ###
     def convertToText(self, flt_file_marker = ''):
         
@@ -322,90 +350,92 @@ class PostProcessingUtils(object):
 
         # Open logs, set log filter and convert to text
         for logFile in self.files:
-                if logFile.endswith('.hdf'):
-                    dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    saveFileTail = '_' + flt_file_marker + '_' + dt_string + '_flt_text.txt'
-                    outputTextFile = logFile.replace('.hdf', saveFileTail)
-                    apex.SetAll('PacketFilter', 0)
-                    apex.SetAll('EventFitler', 0)
-                    # Set log filter
-                    if noPacketFitler == False:
-                        if firstTimeRun:
-                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set log filters...')
-                        for filter in self.pktFilter:
-                            if apex.Set('PacketFilter', filter, 1):
-                                if firstTimeRun:
-                                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set packet ', hex(filter), ' TRUE')
-                            else:
-                                if firstTimeRun:
-                                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid packet code: ', hex(filter))
-                    elif self.isQtrace:
-                        if firstTimeRun:
-                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace enabled and no packets specified, default packet filter will NOT be applied!!!')
-                    else:                        
-                        if firstTimeRun:
-                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default packet filter!')
-                        for filter in self.defaultPacketFilter:
-                            apex.Set('PacketFilter', filter, 1)
+            if logFile.endswith('.hdf'):
+                dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
+                saveFileTail = '_' + flt_file_marker + '_' + dt_string + '_flt_text.txt'
+                outputTextFile = logFile.replace('.hdf', saveFileTail)
+                      
+                apex.SetAll('PacketFilter', 0)
+                apex.SetAll('EventFitler', 0)
+                # Set log filter
+                if noPacketFitler == False:
+                    if firstTimeRun:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set log filters...')
+                    for filter in self.pktFilter:
+                        if apex.Set('PacketFilter', filter, 1):
                             if firstTimeRun:
                                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set packet ', hex(filter), ' TRUE')
-                    apex.Commit('PacketFilter')
+                        else:
+                            if firstTimeRun:
+                                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid packet code: ', hex(filter))
+                elif self.isQtrace:
+                    if firstTimeRun:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace enabled and no packets specified, default packet filter will NOT be applied!!!')
+                else:                        
+                    if firstTimeRun:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default packet filter!')
+                    for filter in self.defaultPacketFilter:
+                        apex.Set('PacketFilter', filter, 1)
+                        if firstTimeRun:
+                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set packet ', hex(filter), ' TRUE')
+                apex.Commit('PacketFilter')
 
-                    # Set event filter
-                    if noEventFitler == False:
-                        if firstTimeRun:
-                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set event filters...')
-                        for filter in self.eventFilter:
-                            if apex.Set('EventFilter', filter, 1):
-                                if firstTimeRun:
-                                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set event ', filter, ' TRUE')
-                            else:
-                                if firstTimeRun:
-                                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid event code: ', filter)
-                    elif self.isQtrace:
-                        if firstTimeRun:
-                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace enabled and no events specified, default event filter will NOT be applied!!!')
-                    else:
-                        if firstTimeRun:
-                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default event filter!')
-                        for filter in self.defaultEventFilter:
-                            apex.Set('EventFilter', filter, 1)
+                # Set event filter
+                if noEventFitler == False:
+                    if firstTimeRun:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set event filters...')
+                    for filter in self.eventFilter:
+                        if apex.Set('EventFilter', filter, 1):
                             if firstTimeRun:
                                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set event ', filter, ' TRUE')
-                    apex.Commit('EventFilter')      
-
-                    # Set Qtrace filter
-                    if self.isQtrace:
+                        else:
+                            if firstTimeRun:
+                                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid event code: ', filter)
+                elif self.isQtrace:
+                    if firstTimeRun:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace enabled and no events specified, default event filter will NOT be applied!!!')
+                else:
+                    if firstTimeRun:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default event filter!')
+                    for filter in self.defaultEventFilter:
+                        apex.Set('EventFilter', filter, 1)
                         if firstTimeRun:
-                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply Qtrace filter!')
-                        '''apex.Set('PacketFilter', 0x1FE7, 1) # Qtrace and F3 pkt 0x1FE7, 0x1FE8, 0x1FEB have to be enabled explicitly
-                        apex.Set('PacketFilter', 0x1FE8, 1)
-                        apex.Set('PacketFilter', 0x1FEB, 1)
-                        apex.Commit('PacketFilter')'''
-                        apex.SetQtraceFilterString(self.qtraceFilterStringList)
-                        apex.SortByTime()
-                    
-                    firstTimeRun = False
+                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set event ', filter, ' TRUE')
+                apex.Commit('EventFilter')      
 
-                    # Open log
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Opening log: ' + str(logFile))
-                    if apex.OpenLog([logFile]) != 1:     
-                        apex.Exit()
-                        sys.exit('(PostProcessingUtils/convertToText) ' + 'Open log failed: ' + str(logFile))
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Log opened')
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Converting to text......')  
-                    
-                    # Save as text
-                    if apex.SaveAsText(outputTextFile) != 1:         
-                        os.kill(apex_pid, signal.SIGTERM)
-                        sys.exit('(PostProcessingUtils/convertToText) ' + 'Save as text failed: ' + str(logFile))
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Converting Completed: ' + outputTextFile)
+                # Set Qtrace filter
+                if self.isQtrace:
+                    if firstTimeRun:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply Qtrace filter!')
+                    '''apex.Set('PacketFilter', 0x1FE7, 1) # Qtrace and F3 pkt 0x1FE7, 0x1FE8, 0x1FEB have to be enabled explicitly
+                    apex.Set('PacketFilter', 0x1FE8, 1)
+                    apex.Set('PacketFilter', 0x1FEB, 1)
+                    apex.Commit('PacketFilter')'''
+                    apex.SetQtraceFilterString(self.qtraceFilterStringList)
+                    apex.SortByTime()
+       
+                firstTimeRun = False
 
-                    # Close log
-                    if apex.CloseFile() != 1:         
-                        apex.Exit()
-                        sys.exit('(PostProcessingUtils/convertToText) ' + 'Failed to close file: ' + str(logFile))  
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Log file closed: ' + str(logFile))  
+                    
+                # Open log
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Opening log: ' + str(logFile))
+                if apex.OpenLog([logFile]) != 1:     
+                    apex.Exit()
+                    sys.exit('(PostProcessingUtils/convertToText) ' + 'Open log failed: ' + str(logFile))
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Log opened')
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Converting to text......')  
+                    
+                # Save as text
+                if apex.SaveAsText(outputTextFile) != 1:         
+                    os.kill(apex_pid, signal.SIGTERM)
+                    sys.exit('(PostProcessingUtils/convertToText) ' + 'Save as text failed: ' + str(logFile))
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Converting Completed: ' + outputTextFile)
+
+                # Close log
+                if apex.CloseFile() != 1:         
+                    apex.Exit()
+                    sys.exit('(PostProcessingUtils/convertToText) ' + 'Failed to close file: ' + str(logFile))  
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Log file closed: ' + str(logFile))  
 
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'All logs converted!')
         apex.Exit()
