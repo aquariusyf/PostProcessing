@@ -24,3 +24,4 @@
 * Visual_IMS_Media.py - Plot VONR talk spurt, pkt loss, HO and PHY layer NewTx/ReTx from MO and MT logs (2 logs in pair) in given path
 * RF_Profile_Histograms.py - Plot RSRP and SNR in histograms and timeline, extract total number of HO and number of unique PCIs from logs in given path
 * FindKeywordsFromLog.py - Find and extract stats of keywords specified in filter mask from logs in given path
+* GetLogPktCodeList.py - Get a list of log packet code captured in given log (Need input of logmask)
