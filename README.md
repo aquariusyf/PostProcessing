@@ -11,7 +11,7 @@
   4. Sub ID (e.g. sub2) - specify sub ID for post processing
   5. -sf - skip filtering logs (.hdf to text)
 
-# Script utility
+# Script Utility
 * PostProcessingUtils.py - Master/Helper classes
 * FilterMask.py - Filters of log packets, events, Qtrace, F3s, Keywords and APEX build-in analyzers
 * Merge_Logs.py - Merge .hdf logs files in given path
