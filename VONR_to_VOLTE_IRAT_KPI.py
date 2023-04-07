@@ -33,7 +33,8 @@ IRATPktLoss = ['Total Num of RTP Loss during IRAT']
 MR_To_irat_Cmd = ['Measurement Report to NR HO Command (ms)']
 irat_Cmd_To_LRRC_Reconfig = ['NR HO Command to LRRC Reconfig (ms)']
 LRRC_Reconfig_To_Config_Complete = ['LRRC Reconfig to LRRC Reconfig Complete (ms)']
-Config_Complete_To_TAU_Req = ['LRRC Reconfig Complete to TAU Request (ms)']
+Config_Complete_To_LRRC_Connected_Event = ['LRRC Reconfig Complete to LRRC Connected Event (ms)']
+LRRC_Connected_Event_To_TAU_Req = ['LRRC Connected Event to TAU Request (ms)']
 TAU_Req_To_TAU_Accept = ['TAU Request to TAU Accept (ms)']
 TAU_Accept_To_TAU_Complete = ['TAU Accept to TAU Complete (ms)']
 
@@ -157,12 +158,13 @@ def getIRATKPI(pktList):
 # Get signaling breakdowns #
 def getSignalingBreakdown(pktList):
     if len(pktList) == 0:
-        return ['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A']
+        return ['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A']
     
     MR_To_HOCmd = 'N/A'
     HOCmd_To_LRRCReconfig = 'N/A'
     LRRCReconfig_To_LRRCReconfigComplete = 'N/A'
-    LRRCReconfigComplete_To_TAUReq = 'N/A'
+    LRRCReconfigComplete_To_LRRC_Connected_Event = 'N/A'
+    LRRC_Connected_Event_To_TAUReq = 'N/A'
     TAUReq_To_TAUAccept = 'N/A'
     TAUAccept_To_TAUComplete = 'N/A'
     
@@ -170,6 +172,7 @@ def getSignalingBreakdown(pktList):
     HOCmd = LogPacket()
     LRRCReconfig = LogPacket()
     LRRCReconfigComplete = LogPacket()
+    LRRCConnectedEvent = LogPacket()
     TAUReq = LogPacket()
     TAUAccept = LogPacket()
     TAUComplete = LogPacket()
@@ -187,6 +190,7 @@ def getSignalingBreakdown(pktList):
                     j -= 1
             LRRCReconfig_Found = False
             LRRCReconfigComplete_Found = False
+            LRRCConnectedEvent_Found = False
             TAUReq_Found = False
             TAU_Accept_Found = False
             for n in range(i, len(pktList)):
@@ -203,6 +207,9 @@ def getSignalingBreakdown(pktList):
                     LRRCReconfigComplete_Found = True
                     LRRCReconfigComplete = pktList[n]
                     # print('LRRCReconfigComplete_Found')
+                elif pktList[n].getTitle() == 'Event  --  EVENT_LTE_RRC_STATE_CHANGE_TRIGGER' and pktList[n].containsIE('CONNECTED_TRIGGER_OTHER') and not LRRCConnectedEvent_Found: # Find LTE RRC Connected Event
+                    LRRCConnectedEvent_Found = True
+                    LRRCConnectedEvent = pktList[n]
                 elif pktList[n].getTitle() == 'LTE NAS EMM Plain OTA Outgoing Message  --  Tracking area update request Msg' and not TAUReq_Found: # Find TAU Request
                     TAUReq_Found = True
                     TAUReq = pktList[n]
@@ -219,14 +226,18 @@ def getSignalingBreakdown(pktList):
         HOCmd_To_LRRCReconfig = LogPacket.getDelay(LRRCReconfig, HOCmd)
     if LRRCReconfig.getTitle() != '' and LRRCReconfigComplete.getTitle() != '':  
         LRRCReconfig_To_LRRCReconfigComplete = LogPacket.getDelay(LRRCReconfigComplete, LRRCReconfig)
-    if LRRCReconfigComplete.getTitle() != '' and TAUReq.getTitle() != '':  
-        LRRCReconfigComplete_To_TAUReq = LogPacket.getDelay(TAUReq, LRRCReconfigComplete)
+    if LRRCReconfigComplete.getTitle() != '' and LRRCConnectedEvent.getTitle() != '':
+        LRRCReconfigComplete_To_LRRC_Connected_Event = LogPacket.getDelay(LRRCConnectedEvent, LRRCReconfigComplete)
+    if LRRCConnectedEvent.getTitle() != '' and TAUReq.getTitle() != '':  
+        LRRC_Connected_Event_To_TAUReq = LogPacket.getDelay(TAUReq, LRRCConnectedEvent)
     if TAUReq.getTitle() != '' and TAUAccept.getTitle() != '':  
         TAUReq_To_TAUAccept = LogPacket.getDelay(TAUAccept, TAUReq)
     if TAUAccept.getTitle() != '' and TAUComplete.getTitle() != '':  
         TAUAccept_To_TAUComplete = LogPacket.getDelay(TAUComplete, TAUAccept)
 
-    return [MR_To_HOCmd, HOCmd_To_LRRCReconfig, LRRCReconfig_To_LRRCReconfigComplete, LRRCReconfigComplete_To_TAUReq, TAUReq_To_TAUAccept, TAUAccept_To_TAUComplete]
+    return [MR_To_HOCmd, HOCmd_To_LRRCReconfig, LRRCReconfig_To_LRRCReconfigComplete, 
+            LRRCReconfigComplete_To_LRRC_Connected_Event, LRRC_Connected_Event_To_TAUReq, 
+            TAUReq_To_TAUAccept, TAUAccept_To_TAUComplete]
 
 # Get related KPI and add to corresponding rows
 for log in logPktList_All_Logs.values():
@@ -240,9 +251,10 @@ for log in logPktList_All_Logs.values():
     MR_To_irat_Cmd.append(sigBreakdown[0])
     irat_Cmd_To_LRRC_Reconfig.append(sigBreakdown[1])
     LRRC_Reconfig_To_Config_Complete.append(sigBreakdown[2])
-    Config_Complete_To_TAU_Req.append(sigBreakdown[3])
-    TAU_Req_To_TAU_Accept.append(sigBreakdown[4])
-    TAU_Accept_To_TAU_Complete.append(sigBreakdown[5])
+    Config_Complete_To_LRRC_Connected_Event.append(sigBreakdown[3])
+    LRRC_Connected_Event_To_TAU_Req.append(sigBreakdown[4])
+    TAU_Req_To_TAU_Accept.append(sigBreakdown[5])
+    TAU_Accept_To_TAU_Complete.append(sigBreakdown[6])
 
 # Init work book and fill rows with data
 wb = Workbook()
@@ -256,7 +268,8 @@ ws.append(IRATPktLoss)
 ws.append(MR_To_irat_Cmd)
 ws.append(irat_Cmd_To_LRRC_Reconfig)
 ws.append(LRRC_Reconfig_To_Config_Complete)
-ws.append(Config_Complete_To_TAU_Req)
+ws.append(Config_Complete_To_LRRC_Connected_Event)
+ws.append(LRRC_Connected_Event_To_TAU_Req)
 ws.append(TAU_Req_To_TAU_Accept)
 ws.append(TAU_Accept_To_TAU_Complete)
 
