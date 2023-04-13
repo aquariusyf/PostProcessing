@@ -143,17 +143,18 @@ for logName in LogPkt_All.keys():
     LogName_List.append(logName)
 
 def plotMediaKPI(Plot_Title = '', Plot_Attributes = {}, Plot_Peer_Side_UL_Attributes = {}, plot = -1):
-    if len(Plot_Attributes) == 0:
+    if len(Plot_Attributes) == 0 and len(Plot_Peer_Side_UL_Attributes) == 0:
         sys.exit('(Visual_IMS_Media/plotMediaKPI) ' + 'No log packets found or attributes are invalid!') 
     
-    #plot.step(pd.to_datetime(Plot_Attributes[X_CDRX]), Plot_Attributes[Y_CDRX], label = "CDRX", color='darkgray', marker='.')
-    plot.scatter(pd.to_datetime(Plot_Attributes[X_CRC_PASS]), Plot_Attributes[Y_CRC_PASS], label = "PDSCH CRC PASS", color='limegreen', marker='.')
-    plot.scatter(pd.to_datetime(Plot_Attributes[X_CRC_FAIL]), Plot_Attributes[Y_CRC_FAIL], label = "PDSCH CRC FAIL", color='red', marker='.')
-    plot.step(pd.to_datetime(Plot_Attributes[X_TALKSPURT]), Plot_Attributes[Y_TALKSPURT], label = "Talkspurt", color='dodgerblue', marker='.')
-    plot.scatter(pd.to_datetime(Plot_Attributes[X_HO_START]), Plot_Attributes[Y_HO_START], label = "HO Start", color='black', marker='>')
-    plot.scatter(pd.to_datetime(Plot_Attributes[X_HO_SUC]), Plot_Attributes[Y_HO_SUC], label = "HO Success", color='black', marker='s')
-    plot.scatter(pd.to_datetime(Plot_Attributes[X_PKT_BURST]), Plot_Attributes[Y_PKT_BURST], label = "DL RTP Burst", color='darkorange', marker='P')
-    plot.scatter(pd.to_datetime(Plot_Attributes[X_PKT_LOSS]), Plot_Attributes[Y_PKT_LOSS], label = "DL Pkt Loss", color='red', marker='x')
+    if Plot_Attributes != {}:
+        #plot.step(pd.to_datetime(Plot_Attributes[X_CDRX]), Plot_Attributes[Y_CDRX], label = "CDRX", color='darkgray', marker='.')
+        plot.scatter(pd.to_datetime(Plot_Attributes[X_CRC_PASS]), Plot_Attributes[Y_CRC_PASS], label = "PDSCH CRC PASS", color='limegreen', marker='.')
+        plot.scatter(pd.to_datetime(Plot_Attributes[X_CRC_FAIL]), Plot_Attributes[Y_CRC_FAIL], label = "PDSCH CRC FAIL", color='red', marker='.')
+        plot.step(pd.to_datetime(Plot_Attributes[X_TALKSPURT]), Plot_Attributes[Y_TALKSPURT], label = "Talkspurt", color='dodgerblue', marker='.')
+        plot.scatter(pd.to_datetime(Plot_Attributes[X_HO_START]), Plot_Attributes[Y_HO_START], label = "HO Start", color='black', marker='>')
+        plot.scatter(pd.to_datetime(Plot_Attributes[X_HO_SUC]), Plot_Attributes[Y_HO_SUC], label = "HO Success", color='black', marker='s')
+        plot.scatter(pd.to_datetime(Plot_Attributes[X_PKT_BURST]), Plot_Attributes[Y_PKT_BURST], label = "DL RTP Burst", color='darkorange', marker='P')
+        plot.scatter(pd.to_datetime(Plot_Attributes[X_PKT_LOSS]), Plot_Attributes[Y_PKT_LOSS], label = "DL Pkt Loss", color='red', marker='x')
     if Plot_Peer_Side_UL_Attributes != {}:
         plot.step(pd.to_datetime(Plot_Peer_Side_UL_Attributes[X_UL_RTP]), Plot_Peer_Side_UL_Attributes[Y_UL_RTP], label = "FarEnd UL RTP", color='blueviolet', marker='.' )
         plot.scatter(pd.to_datetime(Plot_Peer_Side_UL_Attributes[X_UL_NEW_TX]), Plot_Peer_Side_UL_Attributes[Y_UL_NEW_TX], label = "FarEnd PUSCH NEW-TX", color='aqua', marker='.')
@@ -166,7 +167,8 @@ if len(LogName_List) == 0:
     print(datetime.now().strftime("%H:%M:%S"), '(Visual_IMS_Media) ' + 'No filtered text files found!')
 elif len(LogName_List) == 1:
     print(datetime.now().strftime("%H:%M:%S"), '(Visual_IMS_Media) ' + 'Found 1 filtered text file only, no peer side plot available')
-    plotMediaKPI(LogName_List[0].replace('_flt_text.txt', ''), Attr_List[0], {}, UE1)
+    plotMediaKPI(LogName_List[0].replace('_flt_text.txt', '_DL'), Attr_List[0], {}, UE1)
+    plotMediaKPI(LogName_List[0].replace('_flt_text.txt', '_UL'), {}, Attr_List[0], UE2)
 elif len(LogName_List) == 2:
     plotMediaKPI(LogName_List[0].replace('_flt_text.txt', ''), Attr_List[0], Attr_List[1], UE1)
     plotMediaKPI(LogName_List[1].replace('_flt_text.txt', ''), Attr_List[1], Attr_List[0], UE2)
