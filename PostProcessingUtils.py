@@ -415,13 +415,14 @@ class PostProcessingUtils(object):
                     apex.SortByTime()
        
                 firstTimeRun = False
-
-                    
+            
                 # Open log
                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Opening log: ' + str(logFile))
                 if apex.OpenLog([logFile]) != 1:     
-                    apex.Exit()
-                    sys.exit('(PostProcessingUtils/convertToText) ' + 'Open log failed: ' + str(logFile))
+                    #apex.Exit()
+                    #sys.exit('(PostProcessingUtils/convertToText) ' + 'Open log failed: ' + str(logFile))
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Open log failed, skip current log: ' + str(logFile))
+                    continue
                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Log opened')
                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Converting to text......')  
                     
