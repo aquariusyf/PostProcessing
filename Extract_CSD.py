@@ -11,7 +11,7 @@ filter_mask[ANALYZER_FILTER] = [';Common Displays;VoIP Analysis;VONR MO Call Set
 ExtractCSD = PostProcessingUtils()
 ExtractCSD.getArgv(sys.argv)
 ExtractCSD.scanWorkingDir()
-ExtractCSD.exportAnalyzer()
+ExtractCSD.exportAnalyzer('_CSD_All_Grid.xlsm')
 ExtractCSD.scanWorkingDir('.xlsm')
 ALL_CSD_Files = ExtractCSD.getFilesPath()
 

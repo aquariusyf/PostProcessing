@@ -480,7 +480,7 @@ class PostProcessingUtils(object):
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Result in: ' + resultFile)            
 
     ### Export analyzer to Excel ###
-    def exportAnalyzer(self):
+    def exportAnalyzer(self, analyzer_marker = '_All_Grid.xlsm'):
 
         # Check if getArgv and scanWorkingDir is executed and analyzer grids are found, if not, use default analyzer list
         useDefaultAnalyzerList = False
@@ -558,7 +558,7 @@ class PostProcessingUtils(object):
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/exportAnalyzer) ' + 'Load grid ' + loadedGrid + ' complete')
 
             # Export to Excel
-            exportPath = logFile.replace('.hdf', '_CSD_All_Grid.xlsm')
+            exportPath = logFile.replace('.hdf', analyzer_marker)
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/exportAnalyzer) ' + 'Exporting to Excel...')
             if not apex.ExportToExcel(exportPath, 0):
                 apex.Exit()
