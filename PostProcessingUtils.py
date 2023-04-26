@@ -382,9 +382,6 @@ class PostProcessingUtils(object):
                         else:
                             if firstTimeRun:
                                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid packet code: ', hex(filter))
-                elif self.isQtrace:
-                    if firstTimeRun:
-                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace/F3 enabled and no packets specified, default packet filter will NOT be applied!!!')
                 else:                        
                     if firstTimeRun:
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default packet filter!')
@@ -405,9 +402,6 @@ class PostProcessingUtils(object):
                         else:
                             if firstTimeRun:
                                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid event code: ', filter)
-                elif self.isQtrace:
-                    if firstTimeRun:
-                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace/F3 enabled and no events specified, default event filter will NOT be applied!!!')
                 else:
                     if firstTimeRun:
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default event filter!')
