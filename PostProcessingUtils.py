@@ -84,6 +84,9 @@ class PostProcessingUtils(object):
         self.qtraceFilterStringList = {} # Qtrace filter strings
         self.qtraceFilterStringListNonRegex = filterMask[QTRACE_NON_REGEX] # Non regex Qtrace strings
         self.qtraceFilterStringListRegex = filterMask[QTRACE_REGEX] # Regex Qtrace strings
+        self.F3FilterStringList = {} # F3 filter strings
+        self.F3FilterStringListNonRegex = filterMask[F3S_NON_REGEX] # Non regex F3
+        self.F3FilterStringListRegex = filterMask[F3S_REGEX] # Regex F3
         self.analyzerGrid = [] # Grid to be extracted from working dir
         self.defaultAnalyzerList = filterMask[ANALYZER_FILTER] # Default analyzers to be extracted
         self.logPackets = {} # Log packets from logs in working dir
@@ -172,9 +175,9 @@ class PostProcessingUtils(object):
                 #print('(PostProcessingUtils/scanDirs)' + 'Dir found: ' + os.path.join(path, dir))
         
         # Check if Qtrace is enabled and filter is found
-        if self.isQtrace and len(self.qtraceFilterStringListNonRegex) == 0 and len(self.qtraceFilterStringListRegex) == 0:
-            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + "No Qtrace filter found, please specify qtrace keywords in FilterMask!")
-            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'No Qtrace filter will be applied!')
+        if self.isQtrace and len(self.qtraceFilterStringListNonRegex) == 0 and len(self.qtraceFilterStringListRegex) == 0 and len(self.F3FilterStringListNonRegex) == 0 and len(self.F3FilterStringListRegex) == 0:
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + "No Qtrace/F3 filter found, please specify qtrace/F3 keywords in FilterMask!")
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'No Qtrace/F3 filter will be applied!')
             self.isQtrace = False
         elif self.isQtrace and self.fileExt == '.hdf':
             for qt_NonRegex in self.qtraceFilterStringListNonRegex:
@@ -186,7 +189,17 @@ class PostProcessingUtils(object):
                 if qt_Regex == '\n' or qt_Regex.isspace():
                     continue
                 else:
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Qtrace key words in filter: ' + qt_Regex)                        
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Qtrace key words in filter: ' + qt_Regex)
+            for f3_NonRegex in self.F3FilterStringListNonRegex:
+                if f3_NonRegex == '\n' or f3_NonRegex.isspace():
+                    continue
+                else:
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'F3 keywords in filter: ' + f3_NonRegex)
+            for f3_Regex in self.F3FilterStringListRegex:
+                if f3_Regex == '\n' or f3_Regex.isspace():
+                    continue
+                else:
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'F3 keywords in filter: ' + f3_Regex)                      
         
     ### Getter of files in the working directory with given extension ###
     def getFilesPath(self):
@@ -335,6 +348,7 @@ class PostProcessingUtils(object):
             noEventFitler = True
         if self.isQtrace:
             self.qtraceFilterStringList = {0: self.qtraceFilterStringListNonRegex, 1: self.qtraceFilterStringListRegex}
+            self.F3FilterStringList = {0: self.F3FilterStringListNonRegex, 1: self.F3FilterStringListRegex}
         # Open APEX and set log filter
         try:
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Setup APEX automation client ...\n') 
@@ -370,7 +384,7 @@ class PostProcessingUtils(object):
                                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid packet code: ', hex(filter))
                 elif self.isQtrace:
                     if firstTimeRun:
-                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace enabled and no packets specified, default packet filter will NOT be applied!!!')
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace/F3 enabled and no packets specified, default packet filter will NOT be applied!!!')
                 else:                        
                     if firstTimeRun:
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default packet filter!')
@@ -393,7 +407,7 @@ class PostProcessingUtils(object):
                                 print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Invalid event code: ', filter)
                 elif self.isQtrace:
                     if firstTimeRun:
-                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace enabled and no events specified, default event filter will NOT be applied!!!')
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Qtrace/F3 enabled and no events specified, default event filter will NOT be applied!!!')
                 else:
                     if firstTimeRun:
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply default event filter!')
@@ -403,15 +417,16 @@ class PostProcessingUtils(object):
                             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Set event ', filter, ' TRUE')
                 apex.Commit('EventFilter')      
 
-                # Set Qtrace filter
+                # Set Qtrace/F3 filter
                 if self.isQtrace:
                     if firstTimeRun:
-                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply Qtrace filter!')
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'Apply Qtrace/F3 filter!')
                     '''apex.Set('PacketFilter', 0x1FE7, 1) # Qtrace and F3 pkt 0x1FE7, 0x1FE8, 0x1FEB have to be enabled explicitly
                     apex.Set('PacketFilter', 0x1FE8, 1)
                     apex.Set('PacketFilter', 0x1FEB, 1)
                     apex.Commit('PacketFilter')'''
                     apex.SetQtraceFilterString(self.qtraceFilterStringList)
+                    apex.SetF3FilterString(self.F3FilterStringList)
                     apex.SortByTime()
        
                 firstTimeRun = False
@@ -797,6 +812,9 @@ class PostProcessingUtils(object):
         self.qtraceFilterStringList = {}
         self.qtraceFilterStringListNonRegex = []
         self.qtraceFilterStringListRegex = []
+        self.F3FilterStringList = {}
+        self.F3FilterStringListNonRegex = []
+        self.F3FilterStringListRegex = []
         self.analyzerGrid = []
         self.defaultAnalyzerList = []
         self.logPackets = {}
