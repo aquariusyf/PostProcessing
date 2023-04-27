@@ -457,33 +457,40 @@ class PostProcessingUtils(object):
         if len(self.keywords) == 0:
             sys.exit('(PostProcessingUtils/findKeywords) ' + "No keywords found, please specify keywords in FilterMask!")
         
-        resultFile = os.path.join(self.workingDir, 'keywords_search_result.txt')      
+        dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
+        resultFile = os.path.join(self.workingDir, 'keywords_search_result_' + dt_string + '.txt')      
         f = open(resultFile, 'w')
         kw_summary = {}
         
         for key in self.logPackets.keys():
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Searching keywords in: ' + key)  
             f.write('########## ' + key + ' ##########\n') # Print log name before keyword search result
+            kw_list = []
             for kw in self.keywords: # Initialize search result for each keyword
                 kw_summary[kw] = 0
             for logPkt in self.logPackets[key]:
                 for kw in self.keywords:
                     if kw in logPkt.getHeadline(): # Search keywords in log headline
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
-                        f.write(logPkt.getTimestamp() + ' ' + logPkt.getTitle() + '\n') # Print the line with keywords in search result
+                        # f.write(logPkt.getTimestamp() + ' ' + logPkt.getTitle() + '\n') # Print the line with keywords in search result
+                        kw_list.append(logPkt.getTimestamp() + ' ' + logPkt.getTitle()) # Add keywords line in list
                         kw_summary[kw] += 1
                 logContent = logPkt.getContent()
                 for contentLine in logContent:
                     for kw in self.keywords: 
                         if kw in contentLine: # Search keywords in each content line
                             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
-                            f.write(logPkt.getTimestamp() + ' ' + contentLine + '\n') # Print the line with keywords in search result
+                            # f.write(logPkt.getTimestamp() + ' ' + contentLine + '\n') # Print the line with keywords in search result
+                            kw_list.append(logPkt.getTimestamp() + ' ' + contentLine) # Add keywords line in list
                             kw_summary[kw] += 1
                             continue
-            f.write('\n')
+            f.write('\n' + '=============================================================' + '\n')
             for key in kw_summary.keys():
                 f.write('-----Found ' + str(kw_summary[key]) + " '" + key + "' " + '\n') # Print final search result in current log
-            f.write('\n')
+            f.write('=============================================================' + '\n\n')
+            for kw_line in kw_list:
+                f.write(kw_line + '\n')
+            f.write('\n\n\n\n\n')
         f.close()
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Search keywords completed!')
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Result in: ' + resultFile)            
