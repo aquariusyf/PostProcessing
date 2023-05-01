@@ -168,7 +168,7 @@ for key in LogPkt_All.keys():
             Plot_Attr_TD[Y_RLF].append(RLF)
             Plot_Attr_TD[X_RLF].append(pkt.getTimestamp())
             TotalNumRLF += 1
-        elif pkt.getTitle() == 'NR5G RRC OTA Packet  --  DL_DCCH / RRC Reestablishment':
+        elif pkt.getTitle() == 'NR5G RRC OTA Packet  --  UL_CCCH / RRC Reestablishment Req':
             Plot_Attr_TD[Y_RRC_REES].append(RRC_REES)
             Plot_Attr_TD[X_RRC_REES].append(pkt.getTimestamp())
     
@@ -477,7 +477,7 @@ if Plot_Attr_TD[X_HO_FAIL] != [] and Plot_Attr_TD[Y_HO_FAIL] != []:
 if Plot_Attr_TD[X_RLF] != [] and Plot_Attr_TD[Y_RLF] != []:    
     TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RLF]), Plot_Attr_TD[Y_RLF], label = "RLF", color='red', marker='X')
 if Plot_Attr_TD[X_RRC_REES] != [] and Plot_Attr_TD[Y_RRC_REES] != []:    
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RRC_REES]), Plot_Attr_TD[Y_RRC_REES], label = "RRC Reestablish", color='green', marker='P')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RRC_REES]), Plot_Attr_TD[Y_RRC_REES], label = "RRC Reestablish", color='green', marker="P")
 
 TD_plot.legend(loc='upper right')
 TD_plot.set_title('RSRP/SNR in TD (Total ' + str(TotalNumHO) + ' handovers with ' + str(len(list(set(PCI_All)))) +' unique PCIs)')
