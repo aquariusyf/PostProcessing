@@ -458,7 +458,16 @@ class PostProcessingUtils(object):
             sys.exit('(PostProcessingUtils/findKeywords) ' + "No keywords found, please specify keywords in FilterMask!")
         
         dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
-        resultFile = os.path.join(self.workingDir, 'keywords_search_result_' + dt_string + '.txt')      
+        resultFile = ''
+        if self.sid == '0':
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Sub ID not specified, proceed with both subs')
+            resultFile = os.path.join(self.workingDir, 'keywords_search_result_' + dt_string + '.txt')
+        elif self.sid == '1':
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Proceed with both sub1')
+            resultFile = os.path.join(self.workingDir, 'keywords_search_result_' + dt_string + '_SUB1.txt')
+        elif self.sid == '2':
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Proceed with both sub2')
+            resultFile = os.path.join(self.workingDir, 'keywords_search_result_' + dt_string + '_SUB2.txt')       
         f = open(resultFile, 'w')
         kw_summary = {}
         
@@ -470,12 +479,15 @@ class PostProcessingUtils(object):
                 kw_summary[kw] = 0
             for logPkt in self.logPackets[key]:
                 for kw in self.keywords:
-                    if kw in logPkt.getHeadline(): # Search keywords in log headline
+                    if kw in logPkt.getHeadline() and (logPkt.getSubID() == self.sid or self.sid == '0'): # Search keywords in log headline
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
                         # f.write(logPkt.getTimestamp() + ' ' + logPkt.getTitle() + '\n') # Print the line with keywords in search result
                         kw_list.append(logPkt.getTimestamp() + ' ' + logPkt.getTitle()) # Add keywords line in list
                         kw_summary[kw] += 1
-                logContent = logPkt.getContent()
+                if logPkt.getSubID() == self.sid or self.sid == '0':
+                    logContent = logPkt.getContent()
+                else:
+                    continue
                 for contentLine in logContent:
                     for kw in self.keywords: 
                         if kw in contentLine: # Search keywords in each content line
