@@ -478,13 +478,18 @@ class PostProcessingUtils(object):
             for kw in self.keywords: # Initialize search result for each keyword
                 kw_summary[kw] = 0
             for logPkt in self.logPackets[key]:
+                kwFoundInPkt = False
                 for kw in self.keywords:
                     if kw in logPkt.getHeadline() and (logPkt.getSubID() == self.sid or self.sid == '0'): # Search keywords in log headline
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
                         # f.write(logPkt.getTimestamp() + ' ' + logPkt.getTitle() + '\n') # Print the line with keywords in search result
-                        kw_list.append(logPkt.getTimestamp() + ' ' + logPkt.getTitle()) # Add keywords line in list
+                        if logPkt.getSubID() != '':
+                            kw_list.append(logPkt.getTimestamp() + ' ' + 'SUB-' + str(logPkt.getSubID()) + ' ' + logPkt.getTitle()) # Add keywords line in list
+                        else:
+                            kw_list.append(logPkt.getTimestamp() + ' ' + logPkt.getTitle()) # Add keywords line in list
                         kw_summary[kw] += 1
-                if logPkt.getSubID() == self.sid or self.sid == '0':
+                        kwFoundInPkt = True
+                if logPkt.getSubID() == self.sid or self.sid == '0': # Need to handle log pkt without sub id
                     logContent = logPkt.getContent()
                 else:
                     continue
@@ -493,9 +498,15 @@ class PostProcessingUtils(object):
                         if kw in contentLine: # Search keywords in each content line
                             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
                             # f.write(logPkt.getTimestamp() + ' ' + contentLine + '\n') # Print the line with keywords in search result
-                            kw_list.append(logPkt.getTimestamp() + ' ' + contentLine) # Add keywords line in list
+                            if logPkt.getSubID() != '':
+                                kw_list.append(logPkt.getTimestamp() + ' ' + 'SUB-' + str(logPkt.getSubID()) + ' ' + contentLine) # Add keywords line in list
+                            else:
+                                kw_list.append(logPkt.getTimestamp() + ' ' + contentLine) # Add keywords line in list
                             kw_summary[kw] += 1
+                            kwFoundInPkt = True
                             continue
+                if kwFoundInPkt:
+                    kw_list.append('\n')
             f.write('\n' + '=============================================================' + '\n')
             for key in kw_summary.keys():
                 f.write('-----Found ' + str(kw_summary[key]) + " '" + key + "' " + '\n') # Print final search result in current log
