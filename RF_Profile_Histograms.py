@@ -452,32 +452,32 @@ numSNR = float(SNR_Histogram_Attr[SNR_30] + SNR_Histogram_Attr[SNR_30_27] + SNR_
                 + SNR_Histogram_Attr[SNR_n3_n6] + SNR_Histogram_Attr[SNR_n6])
 
 if Plot_Attr_TD[X_RX3_RSRP] != [] and Plot_Attr_TD[Y_RX3_RSRP] != []:
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX3_RSRP]), Plot_Attr_TD[Y_RX3_RSRP], label = "Rx3_RSRP", color='red', marker='.')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX3_RSRP], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RX3_RSRP], label = "Rx3_RSRP", color='red', marker='.')
 if Plot_Attr_TD[X_RX2_RSRP] != [] and Plot_Attr_TD[Y_RX2_RSRP] != []:    
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX2_RSRP]), Plot_Attr_TD[Y_RX2_RSRP], label = "Rx2_RSRP", color='orange', marker='.')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX2_RSRP], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RX2_RSRP], label = "Rx2_RSRP", color='orange', marker='.')
 if Plot_Attr_TD[X_RX1_RSRP] != [] and Plot_Attr_TD[Y_RX1_RSRP] != []:    
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX1_RSRP]), Plot_Attr_TD[Y_RX1_RSRP], label = "Rx1_RSRP", color='green', marker='.')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX1_RSRP], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RX1_RSRP], label = "Rx1_RSRP", color='green', marker='.')
 if Plot_Attr_TD[X_RX0_RSRP] != [] and Plot_Attr_TD[Y_RX0_RSRP] != []:      
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX0_RSRP]), Plot_Attr_TD[Y_RX0_RSRP], label = "Rx0_RSRP", color='blue', marker='.')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX0_RSRP], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RX0_RSRP], label = "Rx0_RSRP", color='blue', marker='.')
 
 if Plot_Attr_TD[X_RX3_SNR] != [] and Plot_Attr_TD[Y_RX3_SNR] != []:  
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX3_SNR]), Plot_Attr_TD[Y_RX3_SNR], label = "Rx3_SNR", color='orangered', marker=',')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX3_SNR], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RX3_SNR], label = "Rx3_SNR", color='orangered', marker=',')
 if Plot_Attr_TD[X_RX2_SNR] != [] and Plot_Attr_TD[Y_RX2_SNR] != []:      
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX2_SNR]), Plot_Attr_TD[Y_RX2_SNR], label = "Rx2_SNR", color='gold', marker=',')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX2_SNR], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RX2_SNR], label = "Rx2_SNR", color='gold', marker=',')
 if Plot_Attr_TD[X_RX1_SNR] != [] and Plot_Attr_TD[Y_RX1_SNR] != []:      
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX1_SNR]), Plot_Attr_TD[Y_RX1_SNR], label = "Rx1_SNR", color='greenyellow', marker=',')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX1_SNR], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RX1_SNR], label = "Rx1_SNR", color='greenyellow', marker=',')
 if Plot_Attr_TD[X_RX0_SNR] != [] and Plot_Attr_TD[Y_RX0_SNR] != []:     
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX0_SNR]), Plot_Attr_TD[Y_RX0_SNR], label = "Rx0_SNR", color='cyan', marker=',')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RX0_SNR], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RX0_SNR], label = "Rx0_SNR", color='cyan', marker=',')
             
 '''TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_START]), Plot_Attr_TD[Y_HO_START], label = "HO Start", color='black', marker='>')'''
 if Plot_Attr_TD[X_HO_SUC] != [] and Plot_Attr_TD[Y_HO_SUC] != []:
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_SUC]), Plot_Attr_TD[Y_HO_SUC], label = "HO Success", color='black', marker='s')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_SUC], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_HO_SUC], label = "HO Success", color='black', marker='s')
 if Plot_Attr_TD[X_HO_FAIL] != [] and Plot_Attr_TD[Y_HO_FAIL] != []:    
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_FAIL]), Plot_Attr_TD[Y_HO_FAIL], label = "HO Failure", color='red', marker='x')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_HO_FAIL], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_HO_FAIL], label = "HO Failure", color='red', marker='x')
 if Plot_Attr_TD[X_RLF] != [] and Plot_Attr_TD[Y_RLF] != []:    
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RLF]), Plot_Attr_TD[Y_RLF], label = "RLF", color='red', marker='X')
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RLF], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RLF], label = "RLF", color='red', marker='X')
 if Plot_Attr_TD[X_RRC_REES] != [] and Plot_Attr_TD[Y_RRC_REES] != []:    
-    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RRC_REES]), Plot_Attr_TD[Y_RRC_REES], label = "RRC Reestablish", color='green', marker="P")
+    TD_plot.scatter(pd.to_datetime(Plot_Attr_TD[X_RRC_REES], format="%H:%M:%S.%f"), Plot_Attr_TD[Y_RRC_REES], label = "RRC Reestablish", color='green', marker="P")
 
 TD_plot.legend(loc='upper right')
 TD_plot.set_title('RSRP/SNR in TD (Total ' + str(TotalNumHO) + ' handovers with ' + str(len(list(set(PCI_All)))) +' unique PCIs)')
