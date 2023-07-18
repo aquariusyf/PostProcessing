@@ -59,7 +59,7 @@ from FilterMask import *
 if platform == "linux" or platform == "linux2":
     sys.path.append('/opt/qcom/APEX7/Support/Python')	
 elif platform == "win32":
-    sys.path.append('C:\Program Files (x86)\Qualcomm\APEX7\Support\Python')
+    sys.path.append('C:\Program Files\Qualcomm\APEX7\Support\Python')
 import ApexClient
 
 ##### Get command line inputs (directory, files, log pkt filter), and run multiple post processing tasks #####
@@ -284,7 +284,7 @@ class PostProcessingUtils(object):
                 for key in self.logPackets.keys():
                     logPackets_sub1[key] = []
                     for log in self.logPackets[key]:
-                        if log.getSubID() == self.sid: # Check if subID == 1
+                        if log.getSubID() == self.sid or log.getSubID() == '': # Check if subID == 1 or subID not present
                             logPackets_sub1[key].append(log)
                 return logPackets_sub1
             elif self.sid == '2': # if sub2 specified, return sub2 pkts only
@@ -293,7 +293,7 @@ class PostProcessingUtils(object):
                 for key in self.logPackets.keys():
                     logPackets_sub2[key] = []
                     for log in self.logPackets[key]:
-                        if log.getSubID() == self.sid: # Check if subID == 2
+                        if log.getSubID() == self.sid or log.getSubID() == '': # Check if subID == 2 or subID not present
                             logPackets_sub2[key].append(log)
                 return logPackets_sub2
             else:
@@ -480,7 +480,7 @@ class PostProcessingUtils(object):
             for logPkt in self.logPackets[key]:
                 kwFoundInPkt = False
                 for kw in self.keywords:
-                    if kw in logPkt.getHeadline() and (logPkt.getSubID() == self.sid or self.sid == '0'): # Search keywords in log headline
+                    if kw in logPkt.getHeadline() and (logPkt.getSubID() == self.sid or logPkt.getSubID() == '' or self.sid == '0'): # Search keywords in log headline
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
                         # f.write(logPkt.getTimestamp() + ' ' + logPkt.getTitle() + '\n') # Print the line with keywords in search result
                         if logPkt.getSubID() != '':
@@ -489,7 +489,7 @@ class PostProcessingUtils(object):
                             kw_list.append(logPkt.getTimestamp() + ' ' + logPkt.getTitle()) # Add keywords line in list
                         kw_summary[kw] += 1
                         kwFoundInPkt = True
-                if logPkt.getSubID() == self.sid or self.sid == '0': # Need to handle log pkt without sub id
+                if logPkt.getSubID() == self.sid or logPkt.getSubID() == '' or self.sid == '0': # Need to handle log pkt without sub id
                     logContent = logPkt.getContent()
                 else:
                     continue
