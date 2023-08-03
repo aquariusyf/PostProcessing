@@ -26,3 +26,4 @@
 * FindKeywordsFromLog.py - Find and extract stats of keywords specified in filter mask from logs in given path
 * GetLogPktCodeList.py - Get a list of log packet code captured in given log (Need input of logmask)
 * N2N_Handover_Delay.py - Extract the N2N handover delays and signaling breakdowns
+* Extract_RedundantTx_Ping_SimResult.py - Extract redundant Tx simulation ping result from sub1 and sub2 for ping++ping DSDA test case
