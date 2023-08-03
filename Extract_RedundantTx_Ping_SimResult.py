@@ -19,10 +19,12 @@ Other_Row = {}
 for n in range(1, 101):
     Other_Row[n] = [n]
 
-RE_PING = re.compile(r'.* time=(.*) ms')
+# RE_PING = re.compile(r'.* time=(.*) ms')
+RE_PING_SUB1 = re.compile(r'.*SUB0.* time=(.*) ms')
+RE_PING_SUB2 = re.compile(r'.*SUB1.* time=(.*) ms')
 
-# PING 14.119.104.254 (14.119.104.254) from 10.77.180.118 rmnet_data4: 1472(1500) bytes of data.
-# 1480 bytes from 14.119.104.254: icmp_seq=1 ttl=54 time=4302 ms
+# 07-28 11:50:24.933  5668 13230 I QMAT.Ping: [SUB1][Thread 1]40 bytes from 112.53.42.52: icmp_seq=1 ttl=52 time=198 ms
+# 07-28 11:50:25.766  5668 13703 I QMAT.Ping: [SUB0][Thread 0]40 bytes from 112.53.42.52: icmp_seq=2 ttl=51 time=27.1 ms
 
 def getFinalResult(sub1PingList, sub2PingList):
     finalResult = []
@@ -48,17 +50,17 @@ def getFinalResult(sub1PingList, sub2PingList):
 
 for file in All_Ping_Results:
     fileName = os.path.split(file)[1]
-    if 'ping_' not in fileName:
+    if ('adb' not in fileName) and ('ADB' not in fileName):
         continue
     First_Row.append(fileName)
     fileLines = []
-    openedFile = open(file, 'r') 
-    fileLines = openedFile.readlines()
+    openedFile = open(file, 'r', encoding="utf8")
     print(datetime.now().strftime("%H:%M:%S"), '(Extract_RedundantTx_Ping_Result) ' + 'File opened: ' + file)
+    fileLines = openedFile.readlines()
     openedFile.close()
     
-    sub1_start_point_found = False
-    sub2_start_point_found = False
+    # sub1_start_point_found = False
+    # sub2_start_point_found = False
     sub1_result = []
     sub2_result = []
     
@@ -66,19 +68,17 @@ for file in All_Ping_Results:
         if line == '\n' or line.isspace(): # Skip empty lines
             continue
         line = line.strip()
-        if 'PING' in line:
-            if not sub1_start_point_found:
-                sub1_start_point_found = True
-            else:
-                sub2_start_point_found = True
-        if RE_PING.match(line) and (sub1_start_point_found and not sub2_start_point_found):
-            formatFound = RE_PING.match(line)
-            pingResult = formatFound.groups()[0].strip()
+        # if 'PING' in line:
+        #     if not sub1_start_point_found:
+        #         sub1_start_point_found = True
+        #     else:
+        #         sub2_start_point_found = True
+        if RE_PING_SUB1.match(line):
+            pingResult = RE_PING_SUB1.match(line).groups()[0].strip()
             sub1_result.append(float(pingResult))
             # print(pingResult)
-        elif RE_PING.match(line) and sub2_start_point_found:
-            formatFound = RE_PING.match(line)
-            pingResult = formatFound.groups()[0].strip()
+        elif RE_PING_SUB2.match(line):
+            pingResult = RE_PING_SUB2.match(line).groups()[0].strip()
             sub2_result.append(float(pingResult))
             # print(pingResult)
     
