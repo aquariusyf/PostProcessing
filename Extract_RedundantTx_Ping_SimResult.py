@@ -15,6 +15,7 @@ First_Row = ['Ping Result']
 Second_Row = ['AVG(ms)']
 Thrid_Row = ['MAX(ms)']
 Fourth_Row = ['MIN(ms)']
+Fifth_Row = ['Better Ping From SUB2 (%)']
 Other_Row = {}
 for n in range(1, 101):
     Other_Row[n] = [n]
@@ -26,14 +27,19 @@ RE_PING_SUB2 = re.compile(r'.*SUB1.* time=(.*) ms')
 # 07-28 11:50:24.933  5668 13230 I QMAT.Ping: [SUB1][Thread 1]40 bytes from 112.53.42.52: icmp_seq=1 ttl=52 time=198 ms
 # 07-28 11:50:25.766  5668 13703 I QMAT.Ping: [SUB0][Thread 0]40 bytes from 112.53.42.52: icmp_seq=2 ttl=51 time=27.1 ms
 
+# PING 112.53.42.114 (112.53.42.114) from 10.33.73.212 rmnet_data1: 32(60) bytes of data.
+# 40 bytes from 112.53.42.114: icmp_seq=1 ttl=51 time=38.9 ms
+
 def getFinalResult(sub1PingList, sub2PingList):
     finalResult = []
     AVG_ping = 'N/A'
     MAX_ping = 'N/A'
     MIN_ping = 'N/A'
     betterPingResultList = []
+    sub2Percentage = 'N/A'
+    sub2Counter = 0
     if sub1PingList == [] or sub2PingList == []:
-        return finalResult, AVG_ping, MAX_ping, MIN_ping
+        return finalResult, AVG_ping, MAX_ping, MIN_ping, sub2Percentage
     
     numOfPing = min(len(sub1PingList), len(sub2PingList))
     
@@ -41,12 +47,15 @@ def getFinalResult(sub1PingList, sub2PingList):
         betterPingResult = min(sub1PingList[m], sub2PingList[m])
         betterPingResultList.append(float(betterPingResult))
         finalResult.append('MIN(' + str(sub1PingList[m]) + ', ' + str(sub2PingList[m]) + ') ' + ' => ' + str(betterPingResult))
+        if betterPingResult == sub2PingList[m]:
+            sub2Counter += 1
     if betterPingResultList != []:
         AVG_ping = float(sum(betterPingResultList)/numOfPing)
         MAX_ping = max(betterPingResultList)
         MIN_ping = min(betterPingResultList)
+        sub2Percentage = float(sub2Counter/numOfPing)
         
-    return finalResult, AVG_ping, MAX_ping, MIN_ping
+    return finalResult, AVG_ping, MAX_ping, MIN_ping, sub2Percentage
 
 for file in All_Ping_Results:
     fileName = os.path.split(file)[1]
@@ -87,10 +96,12 @@ for file in All_Ping_Results:
     AVG_ping_result = result[1]
     MAX_ping_result = result[2]
     MIN_ping_result = result[3]
+    ping_from_sub2_result = result[4]
     
     Second_Row.append(AVG_ping_result)
     Thrid_Row.append(MAX_ping_result)
     Fourth_Row.append(MIN_ping_result)
+    Fifth_Row.append(ping_from_sub2_result)
     
     for x in range(0, len(final_ping_result)):
         Other_Row[x+1].append(final_ping_result[x])
@@ -102,6 +113,7 @@ ws.append(First_Row)
 ws.append(Second_Row)
 ws.append(Thrid_Row)
 ws.append(Fourth_Row)
+ws.append(Fifth_Row)
 for key in Other_Row.keys():
     ws.append(Other_Row[key])
     
