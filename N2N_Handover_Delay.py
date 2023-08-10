@@ -12,7 +12,7 @@ import os
 filter_mask[LOG_FILTER] = [0xB821]
 filter_mask[EVENT_FILTER] = [3188, 3190]
 filter_mask[QTRACE_NON_REGEX] = ['rach_setup_msg1_tx', 'Got DL_RAR_RESULT_INDI', 'rach_rar_state_handler', 'send MAC_RACH_ACTIVITY_IND rach_status',
-                                 'Meas_Eval: Meas eval type']
+                                 'Meas_Eval: Meas eval type', '5GSRCH_DTLD_CON: Meas_Eval: Meas id being evaluated is %d and corresponding  MO is %d[0:Inter, 1:Intra] BM ML Enable: %d Meas eval type - %d (0:Intra 1:Non-Intra 2:CHO), rpt_cfg is CHO - %dReporting config type - %d and Eval trig event- nr5g %d, EUTRAN %d']
 
 # Convert log to text file with default filter
 HO_KPI = PostProcessingUtils()
@@ -182,7 +182,7 @@ def getHOKPI(pktList):
                     continue        
                 while x >= 0:
                     if isCHO:
-                        if pktList[x].getPacketCode() == '0x1FE8' and pktList[x].containsIE('Meas_Eval: Meas eval type - 2'):
+                        if pktList[x].getPacketCode() == '0x1FE8' and pktList[x].containsIE('Meas eval type - 2'):
                             CHO_BreakDown[CRITMET].append(pktList[x])
                             HO_start_index = x
                             # print('Found CHO CRIT MET!!!')
@@ -200,7 +200,7 @@ def getHOKPI(pktList):
                             HO_BreakDown[MR].append(pktList[x])
                             crit_checked = False
                             while crit_n >= 0:
-                                if pktList[crit_n].getPacketCode() == '0x1FE8' and pktList[crit_n].containsIE('Meas_Eval: Meas eval type - 0'):
+                                if pktList[crit_n].getPacketCode() == '0x1FE8' and pktList[crit_n].containsIE('Meas eval type - 0'):
                                     HO_BreakDown[CRITMET].append(pktList[crit_n])
                                     HO_start_index = crit_n
                                     crit_checked = True
@@ -337,8 +337,8 @@ def getHOKPI(pktList):
             HO_DelayBreakDown[MSG1_TO_MSG2].append(LogPacket.getDelay(HO_BreakDown[MSG_2][n], HO_BreakDown[MSG_1][n]))
         if HO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and HO_BreakDown[MSG_2][n] != 'N/A':
             HO_DelayBreakDown[MSG2_TO_SENDRRCCOMPLETE].append(LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[MSG_2][n]))
-        if HO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and HO_BreakDown[HO_CMD][n] != 'N/A':
-            REGHO_Delay.append(LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[HO_CMD][n]))
+        if HO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and HO_BreakDown[CRITMET][n] != 'N/A':
+            REGHO_Delay.append(LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[CRITMET][n]))
     if HO_DelayBreakDown[CRITMET_TO_MR] != []:
         REGHO_CRITMET_TO_MR_Delay = sum(HO_DelayBreakDown[CRITMET_TO_MR])/len(HO_DelayBreakDown[CRITMET_TO_MR])
     if HO_DelayBreakDown[MR_TO_HOCMD] != []:
@@ -374,8 +374,8 @@ def getHOKPI(pktList):
             CHO_DelayBreakDown[MSG1_TO_MSG2].append(LogPacket.getDelay(CHO_BreakDown[MSG_2][n], CHO_BreakDown[MSG_1][n]))
         if CHO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and CHO_BreakDown[MSG_2][n] != 'N/A':
             CHO_DelayBreakDown[MSG2_TO_SENDRRCCOMPLETE].append(LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[MSG_2][n]))
-        if CHO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and CHO_BreakDown[GEN_RRC_RECONFIG][n] != 'N/A':
-            CHO_Delay.append(LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[GEN_RRC_RECONFIG][n]))
+        if CHO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and CHO_BreakDown[CRITMET][n] != 'N/A':
+            CHO_Delay.append(LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[CRITMET][n]))
     if CHO_DelayBreakDown[CRITMET_TO_GENRRCRECONFIG] != []:
         CHO_CRITMET_TO_GENRRCRECONFIG_Delay = sum(CHO_DelayBreakDown[CRITMET_TO_GENRRCRECONFIG])/len(CHO_DelayBreakDown[CRITMET_TO_GENRRCRECONFIG])
     if CHO_DelayBreakDown[GENRRCRECONFIG_TO_GENRRCCOMPLETE] != []:
