@@ -17,7 +17,7 @@ MIN_ONE_LAYER_GRANTS_OF_CONVERGENCE = 15
 First_Row = ['KPI Field']
 Total_DSDA_Entry = ['Total DSDA Entry']
 DSDA_Timestamps = ['DSDA Timestamps']
-Total_Mismatch_Occasions = ['Total Mismatch Occasions']
+Total_Mismatch_Occasions = ['Total 2-Layer Grant Occasions (Layer Mismatch)']
 Mismatch_Timestamps_Rows = {}
 
 class LogPacket_Precoding_Layer(LogPacket):
