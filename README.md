@@ -28,3 +28,4 @@
 * N2N_Handover_Delay.py - Extract the N2N handover delays and signaling breakdowns
 * Extract_RedundantTx_Ping_SimResult.py - Extract redundant Tx simulation ping result from sub1 and sub2 for ping++ping DSDA test case
 * DSDA_UL_Precoding_Layers_Stats.py - Extract the stats of DDS sub precoding layers during DSDA state
+* Reselection_Delay.py - Extract reselection delay KPI (N2N, N2L and L2N)
