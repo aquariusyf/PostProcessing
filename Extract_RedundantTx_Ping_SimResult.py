@@ -17,7 +17,7 @@ Thrid_Row = ['MAX(ms)']
 Fourth_Row = ['MIN(ms)']
 Fifth_Row = ['Better Ping From SUB2 (%)']
 Other_Row = {}
-for n in range(1, 101):
+for n in range(1, 501):
     Other_Row[n] = [n]
 
 # RE_PING = re.compile(r'.* time=(.*) ms')
