@@ -322,7 +322,7 @@ def getHOKPI(pktList):
     REGHO_Delay = []
     AVG_REGHO_Delay = 'N/A'
     for n in range(0, len(HO_BreakDown[CRITMET])): # Get signaling delays
-        if HO_BreakDown[MR][n] != 'N/A' and HO_BreakDown[CRITMET][n] != 'N/A':
+        if HO_BreakDown[MR][n] != 'N/A' and HO_BreakDown[CRITMET][n] != 'N/A' and LogPacket.getDelay(HO_BreakDown[MR][n], HO_BreakDown[CRITMET][n]) < 60000:
             HO_DelayBreakDown[CRITMET_TO_MR].append(LogPacket.getDelay(HO_BreakDown[MR][n], HO_BreakDown[CRITMET][n]))
         if HO_BreakDown[HO_CMD][n] != 'N/A' and HO_BreakDown[MR][n] != 'N/A':
             HO_DelayBreakDown[MR_TO_HOCMD].append(LogPacket.getDelay(HO_BreakDown[HO_CMD][n], HO_BreakDown[MR][n]))
@@ -331,14 +331,17 @@ def getHOKPI(pktList):
             # print(HO_BreakDown[GEN_RRC_COMPLETE][n].getHeadline())
             # print(HO_BreakDown[HO_CMD][n].getHeadline())
             # print(LogPacket.getDelay(HO_BreakDown[GEN_RRC_COMPLETE][n], HO_BreakDown[HO_CMD][n]))
-        if HO_BreakDown[MSG_1][n] != 'N/A' and HO_BreakDown[GEN_RRC_COMPLETE][n] != 'N/A':
+        if HO_BreakDown[MSG_1][n] != 'N/A' and HO_BreakDown[GEN_RRC_COMPLETE][n] != 'N/A' and LogPacket.getDelay(HO_BreakDown[MSG_1][n], HO_BreakDown[GEN_RRC_COMPLETE][n]) < 60000:
             HO_DelayBreakDown[GENRRCCOMPLETE_TO_MSG1].append(LogPacket.getDelay(HO_BreakDown[MSG_1][n], HO_BreakDown[GEN_RRC_COMPLETE][n]))
         if HO_BreakDown[MSG_2][n] != 'N/A' and HO_BreakDown[MSG_1][n] != 'N/A':
             HO_DelayBreakDown[MSG1_TO_MSG2].append(LogPacket.getDelay(HO_BreakDown[MSG_2][n], HO_BreakDown[MSG_1][n]))
-        if HO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and HO_BreakDown[MSG_2][n] != 'N/A':
+        if HO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and HO_BreakDown[MSG_2][n] != 'N/A' and LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[MSG_2][n]) < 60000:
             HO_DelayBreakDown[MSG2_TO_SENDRRCCOMPLETE].append(LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[MSG_2][n]))
         if HO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and HO_BreakDown[CRITMET][n] != 'N/A':
-            REGHO_Delay.append(LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[CRITMET][n]))
+            if LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[CRITMET][n]) >= 60000:
+                REGHO_Delay.append(LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[MR][n]))
+            else:
+                REGHO_Delay.append(LogPacket.getDelay(HO_BreakDown[SEND_RRC_COMPLETE][n], HO_BreakDown[CRITMET][n]))
     if HO_DelayBreakDown[CRITMET_TO_MR] != []:
         REGHO_CRITMET_TO_MR_Delay = sum(HO_DelayBreakDown[CRITMET_TO_MR])/len(HO_DelayBreakDown[CRITMET_TO_MR])
     if HO_DelayBreakDown[MR_TO_HOCMD] != []:
@@ -364,18 +367,21 @@ def getHOKPI(pktList):
     CHO_Delay = []
     AVG_CHO_Delay = 'N/A'
     for n in range(0, len(CHO_BreakDown[CRITMET])): # Get signaling delays
-        if CHO_BreakDown[GEN_RRC_RECONFIG][n] != 'N/A' and CHO_BreakDown[CRITMET][n] != 'N/A':
+        if CHO_BreakDown[GEN_RRC_RECONFIG][n] != 'N/A' and CHO_BreakDown[CRITMET][n] != 'N/A' and LogPacket.getDelay(CHO_BreakDown[GEN_RRC_RECONFIG][n], CHO_BreakDown[CRITMET][n]) < 60000:
             CHO_DelayBreakDown[CRITMET_TO_GENRRCRECONFIG].append(LogPacket.getDelay(CHO_BreakDown[GEN_RRC_RECONFIG][n], CHO_BreakDown[CRITMET][n]))
         if CHO_BreakDown[GEN_RRC_COMPLETE][n] != 'N/A' and CHO_BreakDown[GEN_RRC_RECONFIG][n] != 'N/A':
             CHO_DelayBreakDown[GENRRCRECONFIG_TO_GENRRCCOMPLETE].append(LogPacket.getDelay(CHO_BreakDown[GEN_RRC_COMPLETE][n], CHO_BreakDown[GEN_RRC_RECONFIG][n]))
-        if CHO_BreakDown[MSG_1][n] != 'N/A' and CHO_BreakDown[GEN_RRC_COMPLETE][n] != 'N/A':
+        if CHO_BreakDown[MSG_1][n] != 'N/A' and CHO_BreakDown[GEN_RRC_COMPLETE][n] != 'N/A' and LogPacket.getDelay(CHO_BreakDown[MSG_1][n], CHO_BreakDown[GEN_RRC_COMPLETE][n]) < 60000:
             CHO_DelayBreakDown[GENRRCCOMPLETE_TO_MSG1].append(LogPacket.getDelay(CHO_BreakDown[MSG_1][n], CHO_BreakDown[GEN_RRC_COMPLETE][n]))
         if CHO_BreakDown[MSG_2][n] != 'N/A' and CHO_BreakDown[MSG_1][n] != 'N/A':
             CHO_DelayBreakDown[MSG1_TO_MSG2].append(LogPacket.getDelay(CHO_BreakDown[MSG_2][n], CHO_BreakDown[MSG_1][n]))
-        if CHO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and CHO_BreakDown[MSG_2][n] != 'N/A':
+        if CHO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and CHO_BreakDown[MSG_2][n] != 'N/A' and LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[MSG_2][n]) < 60000:
             CHO_DelayBreakDown[MSG2_TO_SENDRRCCOMPLETE].append(LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[MSG_2][n]))
         if CHO_BreakDown[SEND_RRC_COMPLETE][n] != 'N/A' and CHO_BreakDown[CRITMET][n] != 'N/A':
-            CHO_Delay.append(LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[CRITMET][n]))
+            if LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[CRITMET][n]) >= 60000:
+                CHO_Delay.append(LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[GEN_RRC_RECONFIG][n]))
+            else:
+                CHO_Delay.append(LogPacket.getDelay(CHO_BreakDown[SEND_RRC_COMPLETE][n], CHO_BreakDown[CRITMET][n]))
     if CHO_DelayBreakDown[CRITMET_TO_GENRRCRECONFIG] != []:
         CHO_CRITMET_TO_GENRRCRECONFIG_Delay = sum(CHO_DelayBreakDown[CRITMET_TO_GENRRCRECONFIG])/len(CHO_DelayBreakDown[CRITMET_TO_GENRRCRECONFIG])
     if CHO_DelayBreakDown[GENRRCRECONFIG_TO_GENRRCCOMPLETE] != []:
