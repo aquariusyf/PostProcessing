@@ -27,6 +27,7 @@ class LogPacket_Precoding_Layer(LogPacket):
         
         self.numOfOneLayerGrant = 0
         self.numOfTwoLayerGrant = 0
+        self.totalNumOfGrant = 0
         self.isTwoLayerGrantReceived = False
         self.inDSDAState = False
         self.DSDA_Entry = False
@@ -74,6 +75,9 @@ class LogPacket_Precoding_Layer(LogPacket):
     
     def getnumOfTwoLayerGrant(self):
         return self.numOfTwoLayerGrant
+    
+    def getTotalNumOfGrant(self):
+        return self.totalNumOfGrant
 
     def isTwoLayerGrantsPresent(self):
         return self.isTwoLayerGrantReceived
@@ -103,9 +107,10 @@ class LogPacket_Precoding_Layer(LogPacket):
         NumOfDSDAEntry = 0
         MismatchPeriod_All = []
         MismatchFound = False
-        MismatchPair = ['N/A', 'N/A', 'N/A']
+        MismatchPair = ['N/A', 'N/A', 'N/A', 'N/A'] # Add num of 1 layer grant
         NumOfMismatchOccasions = 0
         CurrentTwoLayerGrants = 0
+        OneLayerGrantDuringToggling = 0
         OneLayerPair = ['N/A', 'N/A', 'N/A']
         CurrentOneLayerGrants = 0
         OneLayerGrantCounter = 0
@@ -155,8 +160,9 @@ class LogPacket_Precoding_Layer(LogPacket):
                     OneLayerPair[1] = logPktList[m]
                     OneLayerPair[2] = CurrentOneLayerGrants
                     if OneLayerPair[0] != 'N/A' and OneLayerPair[1] != 'N/A' and OneLayerPair[2] != 'N/A':
-                        MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')' + '\n')
+                        MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')')
                     StartOfConvergence = 'N/A'
+                    OneLayerGrantDuringToggling = 0
             elif not logPktList[m].isInDSDAState() and MismatchFound: # Upon DSDA exit, mark StartOfConvergence as the end of mismatch if start point found (Convergence threshold not meet yet)
                 MismatchFound =False
                 if MismatchPair[0] != 'N/A' and MismatchPair[1] == 'N/A' and MismatchPair[2] == 'N/A':
@@ -169,15 +175,19 @@ class LogPacket_Precoding_Layer(LogPacket):
                     else:
                         MismatchPair[1] = logPktList[m]
                     MismatchPair[2] = CurrentTwoLayerGrants
-                    MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ')' + '\n')
+                    MismatchPair[3] = OneLayerGrantDuringToggling
+                    MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ')')
                     NumOfMismatchOccasions += 1
                     if OneLayerPair[0] != 'N/A' and OneLayerPair[1] != 'N/A' and OneLayerPair[2] != 'N/A':
-                        MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')' + '\n')
-                StartOfConvergence = 'N/A'    
+                        MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')')
+                StartOfConvergence = 'N/A'
+                OneLayerGrantDuringToggling = 0
             else: # In DSDA state
                 if logPktList[m].isTwoLayerGrantsPresent(): # If two layer grant exist
                     if MismatchFound:  # Already found the start of current mismatch, just count the num of 2 layer grants
                         CurrentTwoLayerGrants += logPktList[m].getnumOfTwoLayerGrant()
+                        OneLayerGrantDuringToggling += OneLayerGrantCounter
+                        OneLayerGrantDuringToggling += logPktList[m].getnumOfOneLayerGrant() # Sometimes single 0xB885 carriers both 1 layer and 2 layer grants
                         OneLayerGrantCounter = 0 # Reset all one layer counter and marker
                         CurrentOneLayerGrants = 0
                         StartOfConvergence = 'N/A'
@@ -187,10 +197,11 @@ class LogPacket_Precoding_Layer(LogPacket):
                         OneLayerPair[1] = logPktList[m]
                         OneLayerPair[2] = CurrentOneLayerGrants
                         if OneLayerPair[0] != 'N/A' and OneLayerPair[1] != 'N/A' and OneLayerPair[2] != 'N/A':
-                            MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')' + '\n')
+                            MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')')
                         OneLayerPair = ['N/A', 'N/A', 'N/A']
-                        MismatchPair = ['N/A', 'N/A', 'N/A']
+                        MismatchPair = ['N/A', 'N/A', 'N/A', 'N/A']
                         OneLayerGrantCounter = 0
+                        OneLayerGrantDuringToggling = 0
                         CurrentOneLayerGrants = 0
                         StartOfConvergence = 'N/A'
                         CurrentTwoLayerGrants = 0
@@ -210,19 +221,21 @@ class LogPacket_Precoding_Layer(LogPacket):
                                 MismatchPair[1] = logPktList[m]
                             CurrentTwoLayerGrants += logPktList[m].getnumOfTwoLayerGrant()
                             MismatchPair[2] = CurrentTwoLayerGrants
-                            MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ')' + '\n')
+                            MismatchPair[3] = OneLayerGrantDuringToggling
+                            OneLayerGrantDuringToggling = 0
+                            MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ')')
                             NumOfMismatchOccasions += 1
                             if OneLayerPair[0] != 'N/A' and OneLayerPair[1] != 'N/A' and OneLayerPair[2] != 'N/A':
-                                MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')' + '\n')
+                                MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')')
                     else:
                         OneLayerPair[0] = StartOfConvergence
                         OneLayerPair[1] = logPktList[m]
                         CurrentOneLayerGrants += logPktList[m].getnumOfOneLayerGrant()
                         OneLayerPair[2] = CurrentOneLayerGrants
                         if OneLayerPair[0] != 'N/A' and OneLayerPair[1] != 'N/A' and OneLayerPair[2] != 'N/A':
-                            MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')' + '\n')
+                            MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')')
                 elif not logPktList[m].isTwoLayerGrantsPresent() and logPktList[m].getnumOfOneLayerGrant() >= 1: # If no two layer grant exist
-                    if MismatchFound: # if 2 layer grants start point found
+                    if MismatchFound: # if 2 layer grants start point found (During toggling)
                         if StartOfConvergence == 'N/A': # Mark first 1 layer grant as start of convergence
                             StartOfConvergence = logPktList[m]
                         OneLayerGrantCounter += logPktList[m].getnumOfOneLayerGrant()
@@ -232,7 +245,9 @@ class LogPacket_Precoding_Layer(LogPacket):
                             if MismatchPair[0] != 'N/A' and MismatchPair[1] == 'N/A' and MismatchPair[2] == 'N/A':
                                 MismatchPair[1] = StartOfConvergence
                                 MismatchPair[2] = CurrentTwoLayerGrants
-                                MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ')' + '\n')
+                                MismatchPair[3] = OneLayerGrantDuringToggling
+                                OneLayerGrantDuringToggling = 0
+                                MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ')')
                                 NumOfMismatchOccasions += 1
                             # OneLayerGrantCounter = 0
                             # StartOfConvergence = 'N/A'
@@ -251,6 +266,7 @@ class LogPacket_Precoding_Layer(LogPacket):
         LogPacket.__del__(self)
         self.numOfOneLayerGrant = 0
         self.numOfTwoLayerGrant = 0
+        self.totalNumOfGrant = 0
         self.isTwoLayerGrantReceived = False
         self.inDSDAState = False
         self.DSDA_Entry = False
@@ -265,6 +281,7 @@ UL_MIMO_Stats_DSDA.scanWorkingDir()
 if not UL_MIMO_Stats_DSDA.skipFitlerLogs():
     UL_MIMO_Stats_DSDA.convertToText('UL_MIMO_Stats_DSDA')
 UL_MIMO_Stats_DSDA.scanWorkingDir('_flt_text.txt', 'UL_MIMO_Stats_DSDA')
+# UL_MIMO_Stats_DSDA.scanWorkingDir('_flt_text.txt', 'FindKW')
 UL_MIMO_Stats_DSDA.initLogPacketList()
 LogPkt_All = UL_MIMO_Stats_DSDA.getLogPacketList()
 
