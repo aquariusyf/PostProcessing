@@ -1076,12 +1076,14 @@ class LogPacket_Talkspurt(LogPacket):
             sys.exit('(LogPacket_Talkspurt/findTalkspurt) ' + 'No log packets found!!!')
         isTalkspurt = False
         rtpPayloadSizeFormat = re.compile(r'^PayLoad Size.*([\d]{2})$')
+        rtpDirectionFormat_DL = re.compile(r'.*NETWORK_TO_UE$')
+        rtpDirectionFormat_UL = re.compile(r'.*UE_TO_NETWORK$')
         # Check RTP payload, greater than 50 = talk spurt, less than 50 = silence
         for pkt in pktList:
             if pkt.getTitle() == 'IMS RTP SN and Payload':
                 RtpContent = pkt.getContent()
                 for n in range(0, len(RtpContent)):
-                    if RtpContent[n] == 'Direction                 = NETWORK_TO_UE':
+                    if rtpDirectionFormat_DL.match(RtpContent[n]):
                         for m in range(n, len(RtpContent)):
                             if rtpPayloadSizeFormat.match(RtpContent[m]):
                                 payloadSize = rtpPayloadSizeFormat.match(RtpContent[m]).groups()[0]
@@ -1097,7 +1099,7 @@ class LogPacket_Talkspurt(LogPacket):
                                     #print('(LogPacket_Talkspurt/findTalkspurt) ' + 'RTP payload size: ', payloadSize, ' is talk spurt: ', pkt.isInTalkspurt())
                                     break
                         break
-                    elif RtpContent[n] == 'Direction                 = UE_TO_NETWORK':
+                    elif rtpDirectionFormat_UL.match(RtpContent[n]):
                         if isTalkspurt:
                             pkt.setTalkspurt()
                             break
