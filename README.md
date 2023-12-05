@@ -7,8 +7,8 @@
 * Additional command (Can be multiple entries in any order separate by space):
   1. Log code (e.g. 0xB887) - specify any log code to overwrite default filter mask
   2. Event code (e.g. 3190) - specify any event code to overwrite default filter mask
-  3. Qtrace - enable qtrace/F3 filtering
-  4. Sub ID (e.g. sub2) - specify sub ID for post processing
+  3. Qtrace (e.g. -qtrace) - enable qtrace/F3 filtering 
+  4. Sub ID (e.g. -sub2) - specify sub ID for post processing
   5. -sf - skip filtering logs (.hdf to text)
 
 # Script Utility
