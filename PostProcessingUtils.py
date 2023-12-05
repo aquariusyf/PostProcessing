@@ -117,12 +117,12 @@ class PostProcessingUtils(object):
                     elif str(sysArgv[n]) == '-sf':
                         self.skipFilterLog = True
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + '-sf flag received, will skip filtering logs!')
-                    elif str(sysArgv[n]) == 'qtrace':
+                    elif str(sysArgv[n]) == '-qtrace':
                         self.isQtrace = True
-                    elif str(sysArgv[n]) == 'sub1':
+                    elif str(sysArgv[n]) == '-sub1':
                         self.sid = '1'
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'sub1 indicator received!')
-                    elif str(sysArgv[n]) == 'sub2':
+                    elif str(sysArgv[n]) == '-sub2':
                         self.sid = '2'
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/getArgv) ' + 'sub2 indicator received!')
                     else:
