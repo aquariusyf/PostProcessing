@@ -40,7 +40,7 @@
 # class LogPacket_RSRP_SNR Functions (Inheritance of LogPacket, get RSRP/SNR info from 0xB8DD)
 #  * getRSTYPE ----- Get reference signal type
 #  * getRSRP ----- Get RSRP dict (Rx: [rsrp])
-#  * getRSRP ----- Get SNR dict (Rx: [snr])
+#  * getSNR ----- Get SNR dict (Rx: [snr])
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 # class LogPacket_HO Functions (Inheritance of LogPacket, get serving and target cell info from HO event)
 #  * getSourceCellInfo ----- Get source cell arfcn and pci
@@ -475,20 +475,25 @@ class PostProcessingUtils(object):
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + 'Searching keywords in: ' + key)  
             f.write('########## ' + key + ' ##########\n') # Print log name before keyword search result
             kw_list = []
+            logPktList = []
             for kw in self.keywords: # Initialize search result for each keyword
                 kw_summary[kw] = 0
             for logPkt in self.logPackets[key]:
                 kwFoundInPkt = False
+                interPktDelay = 0
                 for kw in self.keywords:
                     if kw in logPkt.getHeadline() and (logPkt.getSubID() == self.sid or logPkt.getSubID() == '' or self.sid == '0'): # Search keywords in log headline
                         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
                         # f.write(logPkt.getTimestamp() + ' ' + logPkt.getTitle() + '\n') # Print the line with keywords in search result
+                        if logPktList != []:
+                                interPktDelay = LogPacket.getDelay(logPkt, logPktList[len(logPktList) - 1])
                         if logPkt.getSubID() != '':
-                            kw_list.append(logPkt.getTimestamp() + ' ' + 'SUB-' + str(logPkt.getSubID()) + ' ' + logPkt.getTitle()) # Add keywords line in list
+                            kw_list.append(str(interPktDelay) + ' ms ----- ' + logPkt.getTimestamp() + ' ' + 'SUB-' + str(logPkt.getSubID()) + ' ' + logPkt.getTitle()) # Add keywords line in list
                         else:
-                            kw_list.append(logPkt.getTimestamp() + ' ' + logPkt.getTitle()) # Add keywords line in list
+                            kw_list.append(str(interPktDelay) + ' ms -----' + logPkt.getTimestamp() + ' ' + logPkt.getTitle()) # Add keywords line in list
                         kw_summary[kw] += 1
                         kwFoundInPkt = True
+                        logPktList.append(logPkt)
                 if logPkt.getSubID() == self.sid or logPkt.getSubID() == '' or self.sid == '0': # Need to handle log pkt without sub id
                     logContent = logPkt.getContent()
                 else:
@@ -498,12 +503,15 @@ class PostProcessingUtils(object):
                         if kw in contentLine: # Search keywords in each content line
                             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/findKeywords) ' + "Found keyword: '" + kw + "' in " + logPkt.getHeadline())
                             # f.write(logPkt.getTimestamp() + ' ' + contentLine + '\n') # Print the line with keywords in search result
+                            if logPktList != []:
+                                interPktDelay = LogPacket.getDelay(logPkt, logPktList[len(logPktList) - 1])
                             if logPkt.getSubID() != '':
-                                kw_list.append(logPkt.getTimestamp() + ' ' + 'SUB-' + str(logPkt.getSubID()) + ' ' + contentLine) # Add keywords line in list
+                                kw_list.append(str(interPktDelay) + ' ms ----- ' + logPkt.getTimestamp() + ' ' + 'SUB-' + str(logPkt.getSubID()) + ' ' + contentLine) # Add keywords line in list
                             else:
-                                kw_list.append(logPkt.getTimestamp() + ' ' + contentLine) # Add keywords line in list
+                                kw_list.append(str(interPktDelay) + ' ms ----- ' + logPkt.getTimestamp() + ' ' + contentLine) # Add keywords line in list
                             kw_summary[kw] += 1
                             kwFoundInPkt = True
+                            logPktList.append(logPkt)
                             continue
                 if kwFoundInPkt:
                     kw_list.append('\n')
