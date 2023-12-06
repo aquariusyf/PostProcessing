@@ -221,7 +221,8 @@ class PostProcessingUtils(object):
         for file in self.files: # Open filtered text files with log pkt info
             logPkt = LogPacket()
             fileLines = []
-            openedFile = open(file, 'r', encoding="utf8") 
+            openedFile = open(file, 'r')
+            # openedFile = open(file, 'r', encoding="utf8") 
             fileLines = openedFile.readlines()
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/initLogPacketList) ' + 'File opened: ' + file)
             openedFile.close()
