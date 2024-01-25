@@ -8,9 +8,11 @@
 #  * getLogPacketList ----- Getter of log packet list
 #  * getLogPktCodeList ----- Getter of log packet code list
 #  * convertToText ----- Convert .hdf logs to text files with given log or qtrace filter
+#  * filterLog ----- Apply filters and save as new log 
 #  * findKeywords ----- Find keywords from log text file (Keywords defined in FilterMask)
 #  * exportAnalyzer ----- Extract the given (or default) analyzer/grid from logs
 #  * mergeLogs ----- Merge multiple logs (and convert .qdss/qmdl2 or .bin files to .hdf)
+#  * splitLog ----- Split logs based on time window
 #  * checkConditionIn_X_secs_from_Y ----- Check log packets within x secs of anchor y, take actions (pre-defined) if condition (pre-defined) is met
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 # Class LogPacket Functions
@@ -451,6 +453,129 @@ class PostProcessingUtils(object):
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/convertToText) ' + 'All logs converted!')
         apex.Exit()
 
+    ### Apply filters and save as new log ###
+    def fitlerLog(self, flt_file_marker = '', removeQtrace = False):
+        # Check if logs are found and filter is applied
+        noPacketFitler = False
+        noEventFitler = False
+        firstTimeRun = True
+        if self.fileExt != '.hdf' or len(self.files) == 0:
+            sys.exit('(PostProcessingUtils/fitlerLog) ' + 'No .hdf logs found, please check path or fileExt')
+        if len(self.pktFilter) == 0:
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'No packet filters specified!')
+            noPacketFitler = True
+        if len(self.eventFilter) == 0:
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'No event filters specified!')
+            noEventFitler = True
+        if self.isQtrace:
+            self.qtraceFilterStringList = {0: self.qtraceFilterStringListNonRegex, 1: self.qtraceFilterStringListRegex}
+            self.F3FilterStringList = {0: self.F3FilterStringListNonRegex, 1: self.F3FilterStringListRegex}
+        # Open APEX and set log filter
+        try:
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Setup APEX automation client ...\n') 
+            apex_auto_client = ApexClient.ApexAutomationClient('apex7 automation-client')
+            apex = apex_auto_client.getApexAutomationManager()    
+            apex_pid = apex.GetProcessID()
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'APEX pid: ', apex_pid, '\n')
+            apex.Visible = False
+            apex.ShowHexDump = False
+            apex.UsePCTime = True
+        except:
+            raise RuntimeError('Failed to open APEX')
+
+        # Open logs, set log filter and save as new log
+        for logFile in self.files:
+            if logFile.endswith('.hdf'):
+                saveFileTail = '_' + flt_file_marker + '.hdf'
+                outputTextFile = logFile.replace('.hdf', saveFileTail)
+                if removeQtrace:
+                    self.isQtrace = False
+                    apex.SetAll('PacketFilter', 1)
+                    apex.SetAll('EventFitler', 1)
+                    apex.SetQtraceFilterString({0: [], 1:[]})
+                    apex.SetF3FilterString({0: [], 1:[]})
+                    apex.Set('PacketFilter', 0x1FE7, 0)
+                    apex.Set('PacketFilter', 0x1FE8, 0)
+                    apex.Set('PacketFilter', 0x1FEB, 0)
+                    apex.Set('PacketFilter', 0x1FF0, 0)
+                    apex.Set('PacketFilter', 0x1FFB, 0)
+                    apex.Commit('PacketFilter')
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Remove F3 and Qtrace!')  
+                else:    
+                    apex.SetAll('PacketFilter', 0)
+                    apex.SetAll('EventFitler', 0)
+                    # Set log filter
+                    if noPacketFitler == False:
+                        if firstTimeRun:
+                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Set log filters...')
+                        for filter in self.pktFilter:
+                            if apex.Set('PacketFilter', filter, 1):
+                                if firstTimeRun:
+                                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Set packet ', hex(filter), ' TRUE')
+                            else:
+                                if firstTimeRun:
+                                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Invalid packet code: ', hex(filter))
+                    else:                        
+                        if firstTimeRun:
+                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Apply default packet filter!')
+                        for filter in self.defaultPacketFilter:
+                            apex.Set('PacketFilter', filter, 1)
+                            if firstTimeRun:
+                                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Set packet ', hex(filter), ' TRUE')
+                    apex.Commit('PacketFilter')
+
+                    # Set event filter
+                    if noEventFitler == False:
+                        if firstTimeRun:
+                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Set event filters...')
+                        for filter in self.eventFilter:
+                            if apex.Set('EventFilter', filter, 1):
+                                if firstTimeRun:
+                                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Set event ', filter, ' TRUE')
+                            else:
+                                if firstTimeRun:
+                                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Invalid event code: ', filter)
+                    else:
+                        if firstTimeRun:
+                            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Apply default event filter!')
+                        for filter in self.defaultEventFilter:
+                            apex.Set('EventFilter', filter, 1)
+                            if firstTimeRun:
+                                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Set event ', filter, ' TRUE')
+                    apex.Commit('EventFilter')      
+
+                # Set Qtrace/F3 filter
+                if self.isQtrace:
+                    if firstTimeRun:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Apply Qtrace/F3 filter!')              
+                    apex.SetQtraceFilterString(self.qtraceFilterStringList)
+                    apex.SetF3FilterString(self.F3FilterStringList)
+                    apex.SortByTime()
+                firstTimeRun = False
+            
+                # Open log
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Opening log: ' + str(logFile))
+                if apex.OpenLog([logFile]) != 1:     
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Open log failed, skip current log: ' + str(logFile))
+                    continue
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Log opened')
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Filtering log......')  
+                    
+                # Save as new log
+                if apex.SaveAsNewFile(outputTextFile) != 1:         
+                    os.kill(apex_pid, signal.SIGTERM)
+                    sys.exit('(PostProcessingUtils/fitlerLog) ' + 'Save as new log failed: ' + str(logFile))
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Filtering Completed: ' + outputTextFile)
+
+                # Close log
+                if apex.CloseFile() != 1:         
+                    apex.Exit()
+                    sys.exit('(PostProcessingUtils/fitlerLog) ' + 'Failed to close file: ' + str(logFile))  
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Log file closed: ' + str(logFile))  
+
+        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'All logs filtered!')
+        apex.Exit()
+
     ### Find keywords from log text file (Keywords defined in FilterMask) ###
     def findKeywords(self):
         if len(self.files) == 0:
@@ -744,6 +869,80 @@ class PostProcessingUtils(object):
         apex.Exit()
         print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/mergeLogs) ' + 'All logs merged!')
 
+    
+    ### Split logs based on time window ###
+    def splitLog(self, SegNum):
+        if self.fileExt != '.hdf' or len(self.files) == 0:
+            sys.exit('(PostProcessingUtils/splitLog) ' + 'No .hdf logs found, please check path or fileExt')
+        
+        numOfSeg = 1    
+        if SegNum > 1:
+            numOfSeg = int(SegNum)
+        else:
+            sys.exit('(PostProcessingUtils/splitLog) ' + 'Number of segments has to be greater than 1')
+        
+        # Open APEX
+        try:
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Setup APEX automation client ...\n') 
+            apex_auto_client = ApexClient.ApexAutomationClient('apex7 automation-client')
+            apex = apex_auto_client.getApexAutomationManager()    
+            apex_pid = apex.GetProcessID()
+            print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'APEX pid: ', apex_pid, '\n')
+            apex.Visible = False
+            apex.ShowHexDump = False
+            apex.UsePCTime = True
+            apex.SortByTime()
+        except:
+            raise RuntimeError('Failed to open APEX')
+        
+        LogSegName = '_split_Part_'
+        
+        for logFile in self.files:
+            if logFile.endswith('.hdf') and not LogSegName in str(logFile) and 'fltLog' in str(logFile):
+                # Open log
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Opening log: ' + str(logFile))
+                if apex.OpenLog([logFile]) != 1:     
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Open log failed, skip current log: ' + str(logFile))
+                    continue
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Log opened')
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Spliting logs......')
+                
+                logDuration = apex.GetLogDuration()
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Log duration: ' + str(logDuration) + 's')
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Number of segments: ' + str(numOfSeg))
+
+                offset = 0.0
+                length = logDuration / numOfSeg 
+
+                # Set time window of log
+                for n in range(1, numOfSeg + 1):
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Set time window (offset: ' + str(offset) + ' length: ' + str(length) + ')')
+                    apex.SetTimeWindow(offset, length)
+                    # result = apex.SetTimeWindow(offset, length)
+                    # print("\nSetTimeWindow return: ", result)
+                    LogSegNameIndex = LogSegName + str(n)
+                    saveFileTail = LogSegNameIndex + '.hdf'
+                    outputFileName = logFile.replace('.hdf', saveFileTail)
+                    
+                    # Save log segment
+                    if apex.SaveAsNewFile(outputFileName) != 1:         
+                        os.kill(apex_pid, signal.SIGTERM)
+                        sys.exit('(PostProcessingUtils/splitLog) ' + 'Save log failed: ' + str(logFile))
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Spliting Completed: ' + outputFileName)
+                    offset += length
+
+                # Close log
+                if apex.CloseFile() != 1:         
+                    apex.Exit()
+                    sys.exit('(PostProcessingUtils/splitLog) ' + 'Failed to close file: ' + str(logFile))  
+                print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'Log file closed: ' + str(logFile))
+
+            else:
+                continue
+        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/splitLog) ' + 'All logs splited!')
+        apex.Exit()
+                      
+    
     ### Check log packets within x secs of anchor y, take actions if condition is met ###
     @staticmethod
     def checkConditionIn_X_secs_from_Y(x, y, logPacketList, checkCondition, actionWhenConditionMeet):
