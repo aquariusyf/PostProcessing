@@ -31,3 +31,4 @@
 * Reselection_Delay.py - Extract reselection delay KPI (N2N, N2L and L2N)
 * Extract_ADB_Ping_Result.py - Extract ping result from adb logs
 * Split_Log.py - Split large log files into segments based on time window
+* Extract_NR_CDRX_Configs.py - Extract chronical NR CDRX configurations from logs
