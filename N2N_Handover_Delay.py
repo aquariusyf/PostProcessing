@@ -17,7 +17,7 @@ filter_mask[QTRACE_NON_REGEX] = ['rach_setup_msg1_tx', 'Got DL_RAR_RESULT_INDI',
 # Convert log to text file with default filter
 HO_KPI = PostProcessingUtils()
 ARGV = sys.argv
-ARGV.append('qtrace')
+ARGV.append('-qtrace')
 HO_KPI.getArgv(ARGV)
 HO_KPI.scanWorkingDir() # default is .hdf
 if not HO_KPI.skipFitlerLogs():

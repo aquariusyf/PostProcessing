@@ -274,8 +274,8 @@ class LogPacket_Precoding_Layer(LogPacket):
         
 UL_MIMO_Stats_DSDA = PostProcessingUtils()
 ARGV = sys.argv
-ARGV.append('qtrace')
-ARGV.append('sub1')
+ARGV.append('-qtrace')
+ARGV.append('-sub1')
 UL_MIMO_Stats_DSDA.getArgv(ARGV)
 UL_MIMO_Stats_DSDA.scanWorkingDir()
 if not UL_MIMO_Stats_DSDA.skipFitlerLogs():
