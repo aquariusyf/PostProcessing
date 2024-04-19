@@ -89,6 +89,7 @@ class PostProcessingUtils(object):
         self.F3FilterStringList = {} # F3 filter strings
         self.F3FilterStringListNonRegex = filterMask[F3S_NON_REGEX] # Non regex F3
         self.F3FilterStringListRegex = filterMask[F3S_REGEX] # Regex F3
+        self.debugMsgId = filterMask[DEBUG_MSG_ID] # Debug msg id
         self.analyzerGrid = [] # Grid to be extracted from working dir
         self.defaultAnalyzerList = filterMask[ANALYZER_FILTER] # Default analyzers to be extracted
         self.logPackets = {} # Log packets from logs in working dir
@@ -177,7 +178,7 @@ class PostProcessingUtils(object):
                 #print('(PostProcessingUtils/scanDirs)' + 'Dir found: ' + os.path.join(path, dir))
         
         # Check if Qtrace is enabled and filter is found
-        if self.isQtrace and len(self.qtraceFilterStringListNonRegex) == 0 and len(self.qtraceFilterStringListRegex) == 0 and len(self.F3FilterStringListNonRegex) == 0 and len(self.F3FilterStringListRegex) == 0:
+        if self.isQtrace and len(self.qtraceFilterStringListNonRegex) == 0 and len(self.qtraceFilterStringListRegex) == 0 and len(self.F3FilterStringListNonRegex) == 0 and len(self.F3FilterStringListRegex) == 0 and self.debugMsgId == {}:
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + "No Qtrace/F3 filter found, please specify qtrace/F3 keywords in FilterMask!")
             print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'No Qtrace/F3 filter will be applied!')
             self.isQtrace = False
@@ -201,7 +202,14 @@ class PostProcessingUtils(object):
                 if f3_Regex == '\n' or f3_Regex.isspace():
                     continue
                 else:
-                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'F3 keywords in filter: ' + f3_Regex)                      
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'F3 keywords in filter: ' + f3_Regex)
+            for ssid, level in self.debugMsgId.items():
+                if level == []:
+                    print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Debug MSG level not specified, skip current ssid: ' + str(ssid))
+                    continue
+                else:
+                    for l in level:
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/scanWorkingDir) ' + 'Debug MSG in filter: ' + str(ssid) + '/' + str(l))                     
         
     ### Getter of files in the working directory with given extension ###
     def getFilesPath(self):
@@ -422,8 +430,13 @@ class PostProcessingUtils(object):
                     apex.Set('PacketFilter', 0x1FE8, 1)
                     apex.Set('PacketFilter', 0x1FEB, 1)
                     apex.Commit('PacketFilter')'''
+                    # apex.SetAll("DebugMsgFilter", 0)
                     apex.SetQtraceFilterString(self.qtraceFilterStringList)
                     apex.SetF3FilterString(self.F3FilterStringList)
+                    for ssid in self.debugMsgId.keys():
+                        for level in self.debugMsgId[ssid]:
+                            apex.SetEntity("DebugMsgFilter", ssid, level, 1)
+                    apex.Commit("DebugMsgFilter")
                     apex.SortByTime()
        
                 firstTimeRun = False
@@ -547,9 +560,14 @@ class PostProcessingUtils(object):
                 # Set Qtrace/F3 filter
                 if self.isQtrace:
                     if firstTimeRun:
-                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Apply Qtrace/F3 filter!')              
+                        print(datetime.now().strftime("%H:%M:%S"), '(PostProcessingUtils/fitlerLog) ' + 'Apply Qtrace/F3 filter!') 
+                    apex.SetAll("DebugMsgFilter", 0)             
                     apex.SetQtraceFilterString(self.qtraceFilterStringList)
                     apex.SetF3FilterString(self.F3FilterStringList)
+                    for ssid in self.debugMsgId.keys():
+                        for level in self.debugMsgId[ssid]:
+                            apex.SetEntity("DebugMsgFilter", ssid, level, 1)
+                    apex.Commit("DebugMsgFilter")
                     apex.SortByTime()
                 firstTimeRun = False
             
@@ -1047,6 +1065,7 @@ class PostProcessingUtils(object):
         self.F3FilterStringList = {}
         self.F3FilterStringListNonRegex = []
         self.F3FilterStringListRegex = []
+        self.debugMsgId = {}
         self.analyzerGrid = []
         self.defaultAnalyzerList = []
         self.logPackets = {}
