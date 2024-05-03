@@ -176,7 +176,7 @@ class LogPacket_Precoding_Layer(LogPacket):
                         MismatchPair[1] = logPktList[m]
                     MismatchPair[2] = CurrentTwoLayerGrants
                     MismatchPair[3] = OneLayerGrantDuringToggling
-                    MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ')')
+                    MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ',' + str(MismatchPair[2] + MismatchPair[3]) + ',' + '{:.2f}'.format(MismatchPair[2]/(MismatchPair[2] + MismatchPair[3])) + ')')
                     NumOfMismatchOccasions += 1
                     if OneLayerPair[0] != 'N/A' and OneLayerPair[1] != 'N/A' and OneLayerPair[2] != 'N/A':
                         MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')')
@@ -223,7 +223,7 @@ class LogPacket_Precoding_Layer(LogPacket):
                             MismatchPair[2] = CurrentTwoLayerGrants
                             MismatchPair[3] = OneLayerGrantDuringToggling
                             OneLayerGrantDuringToggling = 0
-                            MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ')')
+                            MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ',' + str(MismatchPair[2] + MismatchPair[3]) + ',' + '{:.2f}'.format(MismatchPair[2]/(MismatchPair[2] + MismatchPair[3])) + ')')
                             NumOfMismatchOccasions += 1
                             if OneLayerPair[0] != 'N/A' and OneLayerPair[1] != 'N/A' and OneLayerPair[2] != 'N/A':
                                 MismatchPeriod_All.append('1L - ' + OneLayerPair[0].getTimestamp() + ' --- ' + OneLayerPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(OneLayerPair[1], OneLayerPair[0])) + 'ms (' + str(OneLayerPair[2]) + ')')
@@ -247,7 +247,7 @@ class LogPacket_Precoding_Layer(LogPacket):
                                 MismatchPair[2] = CurrentTwoLayerGrants
                                 MismatchPair[3] = OneLayerGrantDuringToggling
                                 OneLayerGrantDuringToggling = 0
-                                MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ')')
+                                MismatchPeriod_All.append('2L - ' + MismatchPair[0].getTimestamp() + ' --- ' + MismatchPair[1].getTimestamp() + ' -> ' + str(LogPacket.getDelay(MismatchPair[1], MismatchPair[0])) + 'ms (' + str(MismatchPair[2]) + ',' + str(MismatchPair[3]) + ',' + str(MismatchPair[2] + MismatchPair[3]) + ',' + '{:.2f}'.format(MismatchPair[2]/(MismatchPair[2] + MismatchPair[3])) + ')')
                                 NumOfMismatchOccasions += 1
                             # OneLayerGrantCounter = 0
                             # StartOfConvergence = 'N/A'
