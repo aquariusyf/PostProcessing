@@ -32,3 +32,4 @@
 * Extract_ADB_Ping_Result.py - Extract ping result from adb logs
 * Split_Log.py - Split large log files into segments based on time window
 * Extract_NR_CDRX_Configs.py - Extract chronical NR CDRX configurations from logs
+* DSDS_Tuneway_Time.py - Extract tune away time from logs
