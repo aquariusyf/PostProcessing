@@ -33,3 +33,4 @@
 * Split_Log.py - Split large log files into segments based on time window
 * Extract_NR_CDRX_Configs.py - Extract chronical NR CDRX configurations from logs
 * DSDS_Tuneway_Time.py - Extract tune away time from logs
+* Serving_Cell_Info_Video_FPS.py - Extract NR and LTE serving cell info from logs and merge with FPS data by timestamp
