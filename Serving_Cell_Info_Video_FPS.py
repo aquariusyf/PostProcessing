@@ -61,7 +61,6 @@ serving_cell_info.getArgv(sys.argv)
 serving_cell_info.scanWorkingDir()
 if not serving_cell_info.skipFitlerLogs():
     serving_cell_info.convertToText('serving_cell_info')
-    serving_cell_info.exportAnalyzer()
 serving_cell_info.scanWorkingDir('_flt_text.txt', 'serving_cell_info')
 serving_cell_info.initLogPacketList()
 
