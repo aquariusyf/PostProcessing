@@ -10,7 +10,7 @@ import sys
 import os
 import re
 
-filter_mask[LOG_FILTER] = [0xB974, 0xB193, 0xB064, 0xB821, 0xB0C0]
+filter_mask[LOG_FILTER] = [0xB974, 0xB193, 0xB064, 0xB821, 0xB0C0, 0xB9D2]
 filter_mask[EVENT_FILTER] = []
 filter_mask[QTRACE_NON_REGEX] = []
 filter_mask[KEYWORDS_FILTER] = []
@@ -27,6 +27,9 @@ RE_LTE_RSRQ = re.compile(r'.*True Inst RSRQ = ([\-\.\d]+).*')
 RE_LTE_SNR = re.compile(r'.*RS SNR Rx\[0\] = ([\-\.\dA-Za-z]+).*')
 RE_GRANT_SIZE = re.compile(r'\|[\s\d]+\|[\s\d]+\|.*C\-RNTI\|[\s\d]+\|[\s\d]+\|[\s]*([\d]+)\|.*')
 RE_DISCARD_TIMER = re.compile(r'.*discardTimer\s[ms]*([infty\d]+).*')
+RE_DEEP_STALL = re.compile(r'.*Deep Stall SA = ([TRUEFALS]+).*')
+RE_SHALLOW_STALL = re.compile(r'.*Shallow Stall SA = ([TRUEFALS]+).*')
+RE_HIGH_Q_STALL = re.compile(r'.*Shallow Stall w\/ LLM = ([TRUEFALS]+).*')
 
 STUCK_THRESHOLD = 0 # Stuck threshold, FPS less than this value will be considered as video stuck
 TIMESTAMP = 'Timestamp'
@@ -44,16 +47,21 @@ GRANT_SIZE = 'Grant Size'
 GRANT_SIZE_ACCUM = 'Accumulated Grant Size'
 LTE_DISCARD_TIMER = 'LTE PDCP Discard Timer'
 NR_DISCARD_TIMER = 'NR PDCP Discard Timer'
+DEEP_STALL = 'Deep Stall'
+SHALLOW_STALL = 'Shallow Stall'
+HIGH_Q_STALL = 'High Q Stall'
 
 dict_serving_cell_info = {TIMESTAMP: [], TECH: [], FREQUENCY: [], PCI: [], RSRP: [], RSRQ: [], SNR: [], LOG_NAME: []}
 dict_grant_size = {TIMESTAMP: [], GRANT_SIZE: []}
 dict_discard_timer = {TIMESTAMP: [], NR_DISCARD_TIMER: [], LTE_DISCARD_TIMER: []}
+dict_data_stall = {TIMESTAMP: [], DEEP_STALL: [], SHALLOW_STALL: [], HIGH_Q_STALL: []}
 
 serving_cell_info = PostProcessingUtils()
 serving_cell_info.getArgv(sys.argv)
 serving_cell_info.scanWorkingDir()
 if not serving_cell_info.skipFitlerLogs():
     serving_cell_info.convertToText('serving_cell_info')
+    serving_cell_info.exportAnalyzer()
 serving_cell_info.scanWorkingDir('_flt_text.txt', 'serving_cell_info')
 serving_cell_info.initLogPacketList()
 
@@ -126,6 +134,18 @@ for logname, logs in all_log_pkt.items():
                     dict_discard_timer[LTE_DISCARD_TIMER].append(RE_DISCARD_TIMER.match(line).groups()[0])
                     dict_discard_timer[NR_DISCARD_TIMER].append(None)
                     break
+        elif logpkt.getPacketCode() == '0xB9D2':
+            for line in logpkt.getContent():
+                if RE_DEEP_STALL.match(line):
+                    dict_data_stall[DEEP_STALL].append(RE_DEEP_STALL.match(line).groups()[0])
+                elif RE_SHALLOW_STALL.match(line):
+                    dict_data_stall[SHALLOW_STALL].append(RE_SHALLOW_STALL.match(line).groups()[0])
+                elif RE_HIGH_Q_STALL.match(line):
+                    dict_data_stall[HIGH_Q_STALL].append(RE_HIGH_Q_STALL.match(line).groups()[0])
+                    dict_data_stall[TIMESTAMP].append(logpkt.getTimestamp())
+                    break
+                else:
+                    continue
         else:
             continue
 
@@ -168,6 +188,9 @@ df_grant_size = df_grant_size.astype({'Timestamp': 'str'})
 df_discard_timer = pd.DataFrame(dict_discard_timer)
 df_discard_timer = df_discard_timer.astype({'Timestamp': 'str'})
 
+df_data_stall = pd.DataFrame(dict_data_stall)
+df_data_stall = df_data_stall.astype({'Timestamp': 'str'})
+
 df_fps_data = pd.read_excel(os.path.join(serving_cell_info.workingDir, 'FPS_data.xlsx'), sheet_name='Sheet1')
 df_fps_data = df_fps_data.astype({'Timestamp': 'str'})
 df_fps_data = append_stuck_duration(df_fps_data, 'FPS')
@@ -177,6 +200,8 @@ df_merged = df_merged.sort_values(by='Timestamp')
 df_merged = df_merged.merge(df_grant_size, on='Timestamp', how='outer')
 df_merged = df_merged.sort_values(by='Timestamp')
 df_merged = df_merged.merge(df_discard_timer, on='Timestamp', how='outer')
+df_merged = df_merged.sort_values(by='Timestamp')
+df_merged = df_merged.merge(df_data_stall, on='Timestamp', how='outer')
 df_merged = df_merged.sort_values(by='Timestamp')
 
 df_merged[TECH] = df_merged[TECH].ffill()
@@ -197,7 +222,8 @@ df_merged[GRANT_SIZE] = df_merged[GRANT_SIZE].fillna(0)
 df_merged = df_merged.reset_index(drop=True)
 df_merged = append_accum_grant_size(df_merged, GRANT_SIZE, 'Include', TECH)
 
-df_merged = df_merged[[TIMESTAMP, TECH, FREQUENCY, PCI, RSRP, RSRQ, SNR, 'FPS', 'Stuck_Duration', GRANT_SIZE, GRANT_SIZE_ACCUM, NR_DISCARD_TIMER, LTE_DISCARD_TIMER, 'Include', LOG_NAME]]
+df_merged = df_merged[[TIMESTAMP, TECH, FREQUENCY, PCI, RSRP, RSRQ, SNR, 'FPS', 'Stuck_Duration', GRANT_SIZE, GRANT_SIZE_ACCUM, 
+                       NR_DISCARD_TIMER, LTE_DISCARD_TIMER, DEEP_STALL, SHALLOW_STALL, HIGH_Q_STALL, 'Include', LOG_NAME]]
 
 dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
 saveFileName = 'FPS_vs_Serving_Cell_Info_All_Logs_' + dt_string + '.xlsx'
