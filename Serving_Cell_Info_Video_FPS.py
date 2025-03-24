@@ -42,6 +42,7 @@ SNR = 'SNR(dB)'
 LOG_NAME = 'Log File'
 IS_NR_SERVING_CELL = 'Serving Cell Index = SERVING CELL'
 IS_LTE_SERVING_CELL = 'Is Serving Cell = 1'
+IS_LTE_PCC = 'Serving Cell Index = PCell'
 LTE_PKT_MULTIPLE_ENTRY = 'Cells[1]'
 GRANT_SIZE = 'Grant Size'
 GRANT_SIZE_ACCUM = 'Accumulated Grant Size'
@@ -84,7 +85,7 @@ for logname, logs in all_log_pkt.items():
                     dict_serving_cell_info[SNR].append(RE_NR_SNR.match(line).groups()[0])
                 else:
                     continue
-        elif logpkt.getPacketCode() == '0xB193' and logpkt.containsIE(IS_LTE_SERVING_CELL) and not logpkt.containsIE(LTE_PKT_MULTIPLE_ENTRY): # LTE
+        elif logpkt.getPacketCode() == '0xB193' and logpkt.containsIE(IS_LTE_SERVING_CELL) and logpkt.containsIE(IS_LTE_PCC) and not logpkt.containsIE(LTE_PKT_MULTIPLE_ENTRY): # LTE
             LTE_freq_found = False
             LTE_pci_found = False
             LTE_rsrp_found = False
