@@ -10,7 +10,7 @@ import sys
 import os
 import re
 
-filter_mask[LOG_FILTER] = [0xB974, 0xB193, 0xB064, 0xB821, 0xB0C0, 0xB9D2]
+filter_mask[LOG_FILTER] = [0xB974, 0xB193, 0xB064, 0xB821, 0xB0C0, 0xB9D2, 0xB872, 0xB860]
 filter_mask[EVENT_FILTER] = []
 filter_mask[QTRACE_NON_REGEX] = []
 filter_mask[KEYWORDS_FILTER] = []
@@ -20,12 +20,14 @@ RE_NR_PCI = re.compile(r'.*PCI = ([\d]+)')
 RE_NR_RSRP = re.compile(r'.*Cell Quality RSRP = ([\-\.\d]+).*')
 RE_NR_RSRQ = re.compile(r'.*Cell Quality RSRQ = ([\-\.\d]+).*')
 RE_NR_SNR = re.compile(r'.*Cell Quality SNR = ([\-\.\d]+).*')
+RE_NR_GRANT_SIZE = re.compile(r'\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s\dKHZ]+\|[\s\d]+\|[\s\d]+\|[a-zA-Z\s]+\|.*C_RNTI\|[truefals]+\|[\s\d]+\|[truefals]+\|[\s]*([\d]+)\|.*')
+RE_NR_DISCARD_BYTE = re.compile(r'\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s]*DRB\|[\s]*[AUM]+\|[\s\d]+\|[\s]*NR\|[a-zA-Z_\s]+\|[a-zA-Z\s]+\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s]+([\d]+)\|.*')
 RE_LTE_FREQ = re.compile(r'.*E\-ARFCN = ([\d]+)')
 RE_LTE_PCI = re.compile(r'.*Physical Cell ID = ([\d]+)')
 RE_LTE_RSRP = re.compile(r'.*True Inst Measured RSRP = ([\-\.\d]+).*')
 RE_LTE_RSRQ = re.compile(r'.*True Inst RSRQ = ([\-\.\d]+).*')
 RE_LTE_SNR = re.compile(r'.*RS SNR Rx\[0\] = ([\-\.\dA-Za-z]+).*')
-RE_GRANT_SIZE = re.compile(r'\|[\s\d]+\|[\s\d]+\|.*C\-RNTI\|[\s\d]+\|[\s\d]+\|[\s]*([\d]+)\|.*')
+RE_LTE_GRANT_SIZE = re.compile(r'\|[\s\d]+\|[\s\d]+\|.*C\-RNTI\|[\s\d]+\|[\s\d]+\|[\s]*([\d]+)\|.*')
 RE_DISCARD_TIMER = re.compile(r'.*discardTimer\s[ms]*([infty\d]+).*')
 RE_DEEP_STALL = re.compile(r'.*Deep Stall SA = ([TRUEFALS]+).*')
 RE_SHALLOW_STALL = re.compile(r'.*Shallow Stall SA = ([TRUEFALS]+).*')
@@ -44,18 +46,23 @@ IS_NR_SERVING_CELL = 'Serving Cell Index = SERVING CELL'
 IS_LTE_SERVING_CELL = 'Is Serving Cell = 1'
 IS_LTE_PCC = 'Serving Cell Index = PCell'
 LTE_PKT_MULTIPLE_ENTRY = 'Cells[1]'
-GRANT_SIZE = 'Grant Size'
-GRANT_SIZE_ACCUM = 'Accumulated Grant Size'
+LTE_GRANT_SIZE = 'LTE Grant Size'
+LTE_GRANT_SIZE_ACCUM = 'LTE Accumulated Grant Size'
+NR_GRANT_SIZE = 'NR Grant Size'
+NR_GRANT_SIZE_ACCUM = 'NR Accumulated Grant Size'
 LTE_DISCARD_TIMER = 'LTE PDCP Discard Timer'
 NR_DISCARD_TIMER = 'NR PDCP Discard Timer'
+NR_DISCARD_BYTE = 'NR Discard Bytes'
 DEEP_STALL = 'Deep Stall'
 SHALLOW_STALL = 'Shallow Stall'
 HIGH_Q_STALL = 'High Q Stall'
 
 dict_serving_cell_info = {TIMESTAMP: [], TECH: [], FREQUENCY: [], PCI: [], RSRP: [], RSRQ: [], SNR: [], LOG_NAME: []}
-dict_grant_size = {TIMESTAMP: [], GRANT_SIZE: []}
+dict_lte_grant_size = {TIMESTAMP: [], LTE_GRANT_SIZE: []}
+dict_nr_grant_size = {TIMESTAMP: [], NR_GRANT_SIZE: []}
 dict_discard_timer = {TIMESTAMP: [], NR_DISCARD_TIMER: [], LTE_DISCARD_TIMER: []}
 dict_data_stall = {TIMESTAMP: [], DEEP_STALL: [], SHALLOW_STALL: [], HIGH_Q_STALL: []}
+dict_nr_discard_byte = {TIMESTAMP: [], NR_DISCARD_BYTE: []}
 
 serving_cell_info = PostProcessingUtils()
 serving_cell_info.getArgv(sys.argv)
@@ -85,6 +92,18 @@ for logname, logs in all_log_pkt.items():
                     dict_serving_cell_info[SNR].append(RE_NR_SNR.match(line).groups()[0])
                 else:
                     continue
+        elif logpkt.getPacketCode() == '0xB872': # NR grant size
+            NR_GRANT_SIZE_signle_pkt = 0
+            for line in logpkt.getContent():
+                if RE_NR_GRANT_SIZE.match(line):
+                    NR_GRANT_SIZE_signle_pkt += int(RE_NR_GRANT_SIZE.match(line).groups()[0])
+            dict_nr_grant_size[TIMESTAMP].append(logpkt.getTimestamp())
+            dict_nr_grant_size[NR_GRANT_SIZE].append(NR_GRANT_SIZE_signle_pkt)
+        elif logpkt.getPacketCode() == '0xB860': # NR discard byte
+            for line in logpkt.getContent():
+                if RE_NR_DISCARD_BYTE.match(line):
+                    dict_nr_discard_byte[TIMESTAMP].append(logpkt.getTimestamp())
+                    dict_nr_discard_byte[NR_DISCARD_BYTE].append(int(RE_NR_DISCARD_BYTE.match(line).groups()[0]))
         elif logpkt.getPacketCode() == '0xB193' and logpkt.containsIE(IS_LTE_SERVING_CELL) and logpkt.containsIE(IS_LTE_PCC) and not logpkt.containsIE(LTE_PKT_MULTIPLE_ENTRY): # LTE
             LTE_freq_found = False
             LTE_pci_found = False
@@ -114,12 +133,12 @@ for logname, logs in all_log_pkt.items():
                 else:
                     continue
         elif logpkt.getPacketCode() == '0xB064':
-            grant_size_signle_pkt = 0
+            LTE_GRANT_SIZE_signle_pkt = 0
             for line in logpkt.getContent():
-                if RE_GRANT_SIZE.match(line):
-                    grant_size_signle_pkt += int(RE_GRANT_SIZE.match(line).groups()[0])
-            dict_grant_size[TIMESTAMP].append(logpkt.getTimestamp())
-            dict_grant_size[GRANT_SIZE].append(grant_size_signle_pkt)
+                if RE_LTE_GRANT_SIZE.match(line):
+                    LTE_GRANT_SIZE_signle_pkt += int(RE_LTE_GRANT_SIZE.match(line).groups()[0])
+            dict_lte_grant_size[TIMESTAMP].append(logpkt.getTimestamp())
+            dict_lte_grant_size[LTE_GRANT_SIZE].append(LTE_GRANT_SIZE_signle_pkt)
         elif logpkt.getPacketCode() == '0xB821':
             for line in logpkt.getContent():
                 if RE_DISCARD_TIMER.match(line):
@@ -166,27 +185,46 @@ def append_stuck_duration(df, column): # Get FPS stuck durations
     df['Stuck_Duration'] = counts
     return df
 
-def append_accum_grant_size(df, column_grant_size, column_include, column_tech): # Get accumulated grant size where Include = Yes
-    accum_grant_size = 0
-    df[GRANT_SIZE_ACCUM] = 'NA'
+def append_accum_LTE_GRANT_SIZE(df, column_LTE_GRANT_SIZE, column_include, column_tech): # Get accumulated grant size where Include = Yes
+    accum_LTE_GRANT_SIZE = 0
+    df[LTE_GRANT_SIZE_ACCUM] = 'NA'
     for i in range(len(df)):
         if df.loc[i, column_tech] != 4:
-            accum_grant_size = 0
+            accum_LTE_GRANT_SIZE = 0
         elif df.loc[i, column_include] == 'Yes':
-            df.loc[i, GRANT_SIZE_ACCUM] = accum_grant_size
-            accum_grant_size = 0
+            df.loc[i, LTE_GRANT_SIZE_ACCUM] = accum_LTE_GRANT_SIZE
+            accum_LTE_GRANT_SIZE = 0
         elif df.loc[i, column_include] == 'No':
-            accum_grant_size += df.loc[i, column_grant_size]
+            accum_LTE_GRANT_SIZE += df.loc[i, column_LTE_GRANT_SIZE]
+    return df
+
+def append_accum_NR_GRANT_SIZE(df, column_NR_GRANT_SIZE, column_include, column_tech): # Get accumulated grant size where Include = Yes
+    accum_NR_GRANT_SIZE = 0
+    df[NR_GRANT_SIZE_ACCUM] = 'NA'
+    for i in range(len(df)):
+        if df.loc[i, column_tech] != 5:
+            accum_NR_GRANT_SIZE = 0
+        elif df.loc[i, column_include] == 'Yes':
+            df.loc[i, NR_GRANT_SIZE_ACCUM] = accum_NR_GRANT_SIZE
+            accum_NR_GRANT_SIZE = 0
+        elif df.loc[i, column_include] == 'No':
+            accum_NR_GRANT_SIZE += df.loc[i, column_NR_GRANT_SIZE]
     return df
 
 df_serving_cell = pd.DataFrame(dict_serving_cell_info)
 df_serving_cell = df_serving_cell.astype({'Timestamp': 'str'})
 
-df_grant_size = pd.DataFrame(dict_grant_size)
-df_grant_size = df_grant_size.astype({'Timestamp': 'str'})
+df_nr_grant_size = pd.DataFrame(dict_nr_grant_size)
+df_nr_grant_size = df_nr_grant_size.astype({'Timestamp': 'str'})
+
+df_lte_grant_size = pd.DataFrame(dict_lte_grant_size)
+df_lte_grant_size = df_lte_grant_size.astype({'Timestamp': 'str'})
 
 df_discard_timer = pd.DataFrame(dict_discard_timer)
 df_discard_timer = df_discard_timer.astype({'Timestamp': 'str'})
+
+df_nr_discard_byte = pd.DataFrame(dict_nr_discard_byte)
+df_nr_discard_byte = df_nr_discard_byte.astype({'Timestamp': 'str'})
 
 df_data_stall = pd.DataFrame(dict_data_stall)
 df_data_stall = df_data_stall.astype({'Timestamp': 'str'})
@@ -197,11 +235,15 @@ df_fps_data = append_stuck_duration(df_fps_data, 'FPS')
 
 df_merged = df_serving_cell.merge(df_fps_data, on='Timestamp', how='outer')
 df_merged = df_merged.sort_values(by='Timestamp')
-df_merged = df_merged.merge(df_grant_size, on='Timestamp', how='outer')
+df_merged = df_merged.merge(df_nr_grant_size, on='Timestamp', how='outer')
+df_merged = df_merged.sort_values(by='Timestamp')
+df_merged = df_merged.merge(df_lte_grant_size, on='Timestamp', how='outer')
 df_merged = df_merged.sort_values(by='Timestamp')
 df_merged = df_merged.merge(df_discard_timer, on='Timestamp', how='outer')
 df_merged = df_merged.sort_values(by='Timestamp')
 df_merged = df_merged.merge(df_data_stall, on='Timestamp', how='outer')
+df_merged = df_merged.sort_values(by='Timestamp')
+df_merged = df_merged.merge(df_nr_discard_byte, on='Timestamp', how='outer')
 df_merged = df_merged.sort_values(by='Timestamp')
 
 df_merged[TECH] = df_merged[TECH].ffill()
@@ -213,17 +255,20 @@ df_merged[SNR] = df_merged[SNR].ffill()
 df_merged[LOG_NAME] = df_merged[LOG_NAME].ffill()
 df_merged[NR_DISCARD_TIMER] = df_merged[NR_DISCARD_TIMER].ffill().bfill()
 df_merged[LTE_DISCARD_TIMER] = df_merged[LTE_DISCARD_TIMER].ffill().bfill()
+df_merged[NR_DISCARD_BYTE] = df_merged[NR_DISCARD_BYTE].ffill()
 
 df_merged['Include'] = 'Yes' # Include timestamps only from FPS data
 df_merged['Include'] = df_merged['Include'].where(df_merged['FPS'] >= 0, 'No')
 df_merged['FPS'] = df_merged['FPS'].ffill()
 
-df_merged[GRANT_SIZE] = df_merged[GRANT_SIZE].fillna(0)
+df_merged[NR_GRANT_SIZE] = df_merged[NR_GRANT_SIZE].fillna(0)
+df_merged[LTE_GRANT_SIZE] = df_merged[LTE_GRANT_SIZE].fillna(0)
 df_merged = df_merged.reset_index(drop=True)
-df_merged = append_accum_grant_size(df_merged, GRANT_SIZE, 'Include', TECH)
+df_merged = append_accum_NR_GRANT_SIZE(df_merged, NR_GRANT_SIZE, 'Include', TECH)
+df_merged = append_accum_LTE_GRANT_SIZE(df_merged, LTE_GRANT_SIZE, 'Include', TECH)
 
-df_merged = df_merged[[TIMESTAMP, TECH, FREQUENCY, PCI, RSRP, RSRQ, SNR, 'FPS', 'Stuck_Duration', GRANT_SIZE, GRANT_SIZE_ACCUM, 
-                       NR_DISCARD_TIMER, LTE_DISCARD_TIMER, DEEP_STALL, SHALLOW_STALL, HIGH_Q_STALL, 'Include', LOG_NAME]]
+df_merged = df_merged[[TIMESTAMP, TECH, FREQUENCY, PCI, RSRP, RSRQ, SNR, 'FPS', 'Stuck_Duration', LTE_GRANT_SIZE, LTE_GRANT_SIZE_ACCUM, LTE_DISCARD_TIMER,
+                       NR_GRANT_SIZE, NR_GRANT_SIZE_ACCUM, NR_DISCARD_TIMER, NR_DISCARD_BYTE, DEEP_STALL, SHALLOW_STALL, HIGH_Q_STALL, 'Include', LOG_NAME]]
 
 dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
 saveFileName = 'FPS_vs_Serving_Cell_Info_All_Logs_' + dt_string + '.xlsx'
