@@ -10,7 +10,7 @@ import sys
 import os
 import re
 
-filter_mask[LOG_FILTER] = [0xB974, 0xB193, 0xB064, 0xB821, 0xB0C0, 0xB9D2, 0xB872, 0xB860]
+filter_mask[LOG_FILTER] = [0xB974, 0xB193, 0xB064, 0xB821, 0xB0C0, 0xB9D2, 0xB872, 0xB860, 0xB0B4]
 filter_mask[EVENT_FILTER] = []
 filter_mask[QTRACE_NON_REGEX] = []
 filter_mask[KEYWORDS_FILTER] = []
@@ -28,6 +28,7 @@ RE_LTE_RSRP = re.compile(r'.*True Inst Measured RSRP = ([\-\.\d]+).*')
 RE_LTE_RSRQ = re.compile(r'.*True Inst RSRQ = ([\-\.\d]+).*')
 RE_LTE_SNR = re.compile(r'.*RS SNR Rx\[0\] = ([\-\.\dA-Za-z]+).*')
 RE_LTE_GRANT_SIZE = re.compile(r'\|[\s\d]+\|[\s\d]+\|.*C\-RNTI\|[\s\d]+\|[\s\d]+\|[\s]*([\d]+)\|.*')
+RE_LTE_DISCARD_BYTE = re.compile(r'\|[\s\d]+\|[\s]*DEFAULT\|[\s\d]+\|[\s]*DRB\|[\s]*AM\|[\s\d]+\|[\s]+[1-9][\d]*\|[\s]+[1-9][\d]*\|[\s]+[1-9][\d]*\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s\d]+\|[\s]*([\d]+)\|.*')
 RE_DISCARD_TIMER = re.compile(r'.*discardTimer\s[ms]*([infty\d]+).*')
 RE_DEEP_STALL = re.compile(r'.*Deep Stall SA = ([TRUEFALS]+).*')
 RE_SHALLOW_STALL = re.compile(r'.*Shallow Stall SA = ([TRUEFALS]+).*')
@@ -43,6 +44,7 @@ RSRQ = 'RSRQ(dB)'
 SNR = 'SNR(dB)'
 LOG_NAME = 'Log File'
 IS_NR_SERVING_CELL = 'Serving Cell Index = SERVING CELL'
+IS_NR_PCC = 'CC ID = 0'
 IS_LTE_SERVING_CELL = 'Is Serving Cell = 1'
 IS_LTE_PCC = 'Serving Cell Index = PCell'
 LTE_PKT_MULTIPLE_ENTRY = 'Cells[1]'
@@ -51,6 +53,7 @@ LTE_GRANT_SIZE_ACCUM = 'LTE Accumulated Grant Size'
 NR_GRANT_SIZE = 'NR Grant Size'
 NR_GRANT_SIZE_ACCUM = 'NR Accumulated Grant Size'
 LTE_DISCARD_TIMER = 'LTE PDCP Discard Timer'
+LTE_DISCARD_BYTE = 'LTE Discard Bytes'
 NR_DISCARD_TIMER = 'NR PDCP Discard Timer'
 NR_DISCARD_BYTE = 'NR Discard Bytes'
 DEEP_STALL = 'Deep Stall'
@@ -63,6 +66,7 @@ dict_nr_grant_size = {TIMESTAMP: [], NR_GRANT_SIZE: []}
 dict_discard_timer = {TIMESTAMP: [], NR_DISCARD_TIMER: [], LTE_DISCARD_TIMER: []}
 dict_data_stall = {TIMESTAMP: [], DEEP_STALL: [], SHALLOW_STALL: [], HIGH_Q_STALL: []}
 dict_nr_discard_byte = {TIMESTAMP: [], NR_DISCARD_BYTE: []}
+dict_lte_discard_byte = {TIMESTAMP: [], LTE_DISCARD_BYTE: []}
 
 serving_cell_info = PostProcessingUtils()
 serving_cell_info.getArgv(sys.argv)
@@ -75,7 +79,7 @@ serving_cell_info.initLogPacketList()
 all_log_pkt = serving_cell_info.getLogPacketList()
 for logname, logs in all_log_pkt.items():
     for logpkt in logs:
-        if logpkt.getPacketCode() == '0xB974' and logpkt.containsIE(IS_NR_SERVING_CELL): # NR
+        if logpkt.getPacketCode() == '0xB974' and logpkt.containsIE(IS_NR_SERVING_CELL) and logpkt.containsIE(IS_NR_PCC): # NR serving RF profile
             for line in logpkt.getContent():
                 if RE_NR_FREQ.match(line) and int(RE_NR_FREQ.match(line).groups()[0]) > 0:
                     dict_serving_cell_info[FREQUENCY].append(int(RE_NR_FREQ.match(line).groups()[0]))
@@ -110,7 +114,7 @@ for logname, logs in all_log_pkt.items():
             LTE_rsrp_found = False
             LTE_rsrq_found = False
             LTE_snr_found = False
-            for line in logpkt.getContent():
+            for line in logpkt.getContent(): # LTE serving RF profile
                 if RE_LTE_FREQ.match(line) and int(RE_LTE_FREQ.match(line).groups()[0]) > 0 and not LTE_freq_found:
                     dict_serving_cell_info[FREQUENCY].append(int(RE_LTE_FREQ.match(line).groups()[0]))
                     dict_serving_cell_info[TIMESTAMP].append(logpkt.getTimestamp())
@@ -132,28 +136,33 @@ for logname, logs in all_log_pkt.items():
                     break
                 else:
                     continue
-        elif logpkt.getPacketCode() == '0xB064':
+        elif logpkt.getPacketCode() == '0xB064': # LTE grant size
             LTE_GRANT_SIZE_signle_pkt = 0
             for line in logpkt.getContent():
                 if RE_LTE_GRANT_SIZE.match(line):
                     LTE_GRANT_SIZE_signle_pkt += int(RE_LTE_GRANT_SIZE.match(line).groups()[0])
             dict_lte_grant_size[TIMESTAMP].append(logpkt.getTimestamp())
-            dict_lte_grant_size[LTE_GRANT_SIZE].append(LTE_GRANT_SIZE_signle_pkt)
-        elif logpkt.getPacketCode() == '0xB821':
+            dict_lte_grant_size[LTE_GRANT_SIZE].append(LTE_GRANT_SIZE_signle_pkt)         
+        elif logpkt.getPacketCode() == '0xB0B4': # LTE discard byte
+            for line in logpkt.getContent():
+                if RE_LTE_DISCARD_BYTE.match(line):
+                    dict_lte_discard_byte[TIMESTAMP].append(logpkt.getTimestamp())
+                    dict_lte_discard_byte[LTE_DISCARD_BYTE].append(int(RE_LTE_DISCARD_BYTE.match(line).groups()[0]))
+        elif logpkt.getPacketCode() == '0xB821': # PDCP discard timer
             for line in logpkt.getContent():
                 if RE_DISCARD_TIMER.match(line):
                     dict_discard_timer[TIMESTAMP].append(logpkt.getTimestamp())
                     dict_discard_timer[NR_DISCARD_TIMER].append(RE_DISCARD_TIMER.match(line).groups()[0])
                     dict_discard_timer[LTE_DISCARD_TIMER].append(None)
                     break
-        elif logpkt.getPacketCode() == '0xB0C0':
+        elif logpkt.getPacketCode() == '0xB0C0': # PDCP discard timer
             for line in logpkt.getContent():
                 if RE_DISCARD_TIMER.match(line):
                     dict_discard_timer[TIMESTAMP].append(logpkt.getTimestamp())
                     dict_discard_timer[LTE_DISCARD_TIMER].append(RE_DISCARD_TIMER.match(line).groups()[0])
                     dict_discard_timer[NR_DISCARD_TIMER].append(None)
                     break
-        elif logpkt.getPacketCode() == '0xB9D2':
+        elif logpkt.getPacketCode() == '0xB9D2': # data stall detection
             for line in logpkt.getContent():
                 if RE_DEEP_STALL.match(line):
                     dict_data_stall[DEEP_STALL].append(RE_DEEP_STALL.match(line).groups()[0])
@@ -226,6 +235,9 @@ df_discard_timer = df_discard_timer.astype({'Timestamp': 'str'})
 df_nr_discard_byte = pd.DataFrame(dict_nr_discard_byte)
 df_nr_discard_byte = df_nr_discard_byte.astype({'Timestamp': 'str'})
 
+df_lte_discard_byte = pd.DataFrame(dict_lte_discard_byte)
+df_lte_discard_byte = df_lte_discard_byte.astype({'Timestamp': 'str'})
+
 df_data_stall = pd.DataFrame(dict_data_stall)
 df_data_stall = df_data_stall.astype({'Timestamp': 'str'})
 
@@ -245,6 +257,8 @@ df_merged = df_merged.merge(df_data_stall, on='Timestamp', how='outer')
 df_merged = df_merged.sort_values(by='Timestamp')
 df_merged = df_merged.merge(df_nr_discard_byte, on='Timestamp', how='outer')
 df_merged = df_merged.sort_values(by='Timestamp')
+df_merged = df_merged.merge(df_lte_discard_byte, on='Timestamp', how='outer')
+df_merged = df_merged.sort_values(by='Timestamp')
 
 df_merged[TECH] = df_merged[TECH].ffill()
 df_merged[FREQUENCY] = df_merged[FREQUENCY].ffill()
@@ -256,6 +270,7 @@ df_merged[LOG_NAME] = df_merged[LOG_NAME].ffill()
 df_merged[NR_DISCARD_TIMER] = df_merged[NR_DISCARD_TIMER].ffill().bfill()
 df_merged[LTE_DISCARD_TIMER] = df_merged[LTE_DISCARD_TIMER].ffill().bfill()
 df_merged[NR_DISCARD_BYTE] = df_merged[NR_DISCARD_BYTE].ffill()
+df_merged[LTE_DISCARD_BYTE] = df_merged[LTE_DISCARD_BYTE].ffill()
 
 df_merged['Include'] = 'Yes' # Include timestamps only from FPS data
 df_merged['Include'] = df_merged['Include'].where(df_merged['FPS'] >= 0, 'No')
@@ -267,7 +282,7 @@ df_merged = df_merged.reset_index(drop=True)
 df_merged = append_accum_NR_GRANT_SIZE(df_merged, NR_GRANT_SIZE, 'Include', TECH)
 df_merged = append_accum_LTE_GRANT_SIZE(df_merged, LTE_GRANT_SIZE, 'Include', TECH)
 
-df_merged = df_merged[[TIMESTAMP, TECH, FREQUENCY, PCI, RSRP, RSRQ, SNR, 'FPS', 'Stuck_Duration', LTE_GRANT_SIZE, LTE_GRANT_SIZE_ACCUM, LTE_DISCARD_TIMER,
+df_merged = df_merged[[TIMESTAMP, TECH, FREQUENCY, PCI, RSRP, RSRQ, SNR, 'FPS', 'Stuck_Duration', LTE_GRANT_SIZE, LTE_GRANT_SIZE_ACCUM, LTE_DISCARD_TIMER, LTE_DISCARD_BYTE,
                        NR_GRANT_SIZE, NR_GRANT_SIZE_ACCUM, NR_DISCARD_TIMER, NR_DISCARD_BYTE, DEEP_STALL, SHALLOW_STALL, HIGH_Q_STALL, 'Include', LOG_NAME]]
 
 dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
