@@ -235,13 +235,13 @@ def getSignalingBreakdown(pktList):
     if RRCSetup.getTitle() != '' and RRCComplete.getTitle() != '':  
         RRCSetup_To_RRCComplete = LogPacket.getDelay(RRCComplete, RRCSetup)
     if RRCComplete.getTitle() != '' and TAUAccept.getTitle() != '':  
-        TAUReq_To_TAUAccept = LogPacket.getDelay(TAUAccept, RRCComplete)
+        RRCComplete_To_TAUAccept = LogPacket.getDelay(TAUAccept, RRCComplete)
     if TAUAccept.getTitle() != '' and TAUComplete.getTitle() != '':  
         TAUAccept_To_TAUComplete = LogPacket.getDelay(TAUComplete, TAUAccept)
 
     return [MR_To_NRRC_Rel, NRRC_Rel_To_TAUReq, TAUReq_To_RRCReq, 
             RRCReq_To_RRCSetup, RRCSetup_To_RRCComplete, 
-            TAUReq_To_TAUAccept, TAUAccept_To_TAUComplete]
+            RRCComplete_To_TAUAccept, TAUAccept_To_TAUComplete]
 
 # Get related KPI and add to corresponding rows
 for log in logPktList_All_Logs.values():
